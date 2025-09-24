@@ -16,18 +16,23 @@ from element.problem_setup import (
 
 from element.utility_func import cost_util
 # -------------------------- GA & model knobs (ALL HERE) -----------------
-from test_constants import (ELE_GA_SEED_FOR_PyGAD, ELE_GA_POP, ELE_GA_GENS, ELE_GA_LB_BETA, ELE_GA_UB_BETA, 
-                            ELE_GA_MUTATION_PERCENT_GENES, ELE_GA_CROSSOVER_TYPE, ELE_GA_PARENT_SELECTION, ELE_GA_KEEP_PARENTS, ELE_GA_MAX_COST,
-                            ELE_GA_RANDOM_STATE, ELE_GA_RESET_PROB,ELE_GA_DIRICHLET_ALPHA)
+import test_constants
 
-SEED = ELE_GA_SEED_FOR_PyGAD
-NUM_GENERATIONS = ELE_GA_GENS
-POPULATION_SIZE = ELE_GA_POP
+#load constants
+SEED = test_constants.ELE_GA_SEED_FOR_PyGAD
+NUM_GENERATIONS = test_constants.ELE_GA_GENS
+POPULATION_SIZE = test_constants.ELE_GA_POP
 NUM_PARENTS_MATING = max(2, POPULATION_SIZE // 2) # ensure at least 2 parents
-MUTATION_PERCENT_GENES = ELE_GA_MUTATION_PERCENT_GENES
-CROSSOVER_TYPE = ELE_GA_CROSSOVER_TYPE
-PARENT_SELECTION = ELE_GA_PARENT_SELECTION
-KEEP_PARENTS = ELE_GA_KEEP_PARENTS
+MUTATION_PERCENT_GENES = test_constants.ELE_GA_MUTATION_PERCENT_GENES
+CROSSOVER_TYPE = test_constants.ELE_GA_CROSSOVER_TYPE
+PARENT_SELECTION = test_constants.ELE_GA_PARENT_SELECTION
+KEEP_PARENTS = test_constants.ELE_GA_KEEP_PARENTS
+ELE_GA_LB_BETA = test_constants.ELE_GA_LB_BETA
+ELE_GA_UB_BETA = test_constants.ELE_GA_UB_BETA
+ELE_GA_MAX_COST = test_constants.ELE_GA_MAX_COST
+ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
+ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
+ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
 # -------------------------- Prepare arrays ------------------------------
 # Keep the same shapes used in rl_env.step():
 P_actions = np.asarray(action_model, float)   # (na, ncs, ncs)
@@ -55,7 +60,7 @@ def reliability_based_action(beta_t, betas_desc):
     return 0 # do nothing
 
 
-def rollout_betas(betas_raw):
+def rollout_betas(betas_raw, state0=None): # state0 is unused now but I defined it to be able to use multiple rollouts per solution if needed and check what will change in the result
     """
     Simulate one episode over the finite horizon using β-thresholds.
     Returns:
@@ -121,8 +126,8 @@ def fitness_func(ga_instance, solution, solution_idx):
     return float(-exp_dis_cost)  # PyGAD maximizes fitness; we minimize cost.
 
 
-# If you want to condier multiple rollouts per solution to reduce noise, uncomment below and comment above / if uncommnet below, I need to 
-# remove the " state = STATE0.copy(): from rollout_betas function and pass state0 as an argument to rollout_betas function"
+# # If you want to condier multiple rollouts per solution to reduce noise, uncomment below and comment above / if uncommnet below, I need to 
+# # remove the " state = STATE0.copy(): from rollout_betas function and pass state0 as an argument to rollout_betas function"
 # def fitness_func(ga_instance, solution, solution_idx):
 #     K = 10  # number of rollouts
 #     total_cost = 0.0
@@ -206,37 +211,46 @@ print("Wrote pygad_beta_dp_report.json")
 end_time = time.time()
 elapsed_time = end_time - start_time
 print(f"Run completed in {elapsed_time:.2f} seconds")
+
+
 # %%
-# Compare the GA result with PPO result(Evaluatoin of GA policy in PPO env)
+# Compare the GA result with PPO result(Evaluatoin of GA policy in PPO env to have fair comparison)
 # === Evaluate GA policy in the same PPO env ===
-import json, numpy as np, torch
+import numpy as np
+import json
+import torch
 from scipy.stats import norm
 from collections import defaultdict
 from tqdm import tqdm
 from torchrl.envs.utils import set_exploration_type
 from torchrl_bridge import create_element_env
-from element.problem_setup import ncs, cs_pfs  # pf per-state
+from element.problem_setup import ncs, cs_pfs
 import test_constants
+import sys
 
-# 1) Get GA thresholds (betas_desc) either from the saved report or from memory
+# 1) Get GA thresholds (betas_desc) from the saved report
 try:
     with open("pygad_beta_dp_report.json") as f:
         ga_report = json.load(f)
         betas_desc = np.array(ga_report["betas_desc"], dtype=float)   # already DESC
 except FileNotFoundError:
-    # fallback if you have them in memory
-    betas_desc = np.sort(np.clip(best_betas, ELE_GA_LB_BETA, ELE_GA_UB_BETA))[::-1]
+    print("No GA report found.")
+    sys.exit(1)  # Exit with error code 1
+
 
 pf_array = np.asarray(cs_pfs, float)  # shape (ncs,)
 
 def action_policy_ga(obs, betas_desc, pf_array, ncs):
     """Map observation -> GA action via reliability thresholds."""
-    # obs may be torch tensor; slice first ncs entries (state distribution)
-    state_dis = obs[:ncs].cpu().numpy() if torch.is_tensor(obs) else np.asarray(obs[:ncs], float)
+    state_dis = np.asarray(obs[:ncs], float)
     pf_t = float(np.clip(pf_array @ state_dis, 1e-12, 1 - 1e-12))
     beta_t = float(norm.ppf(1.0 - pf_t))
-    # generic threshold rule: action = number of thresholds satisfied (<=)
-    return int(np.sum(beta_t <= betas_desc))  # yields 0..len(betas_desc)
+    beta_ac1, beta_ac2, beta_ac3, beta_ac4 = betas_desc
+    if beta_t <= beta_ac4: return 4
+    if beta_t <= beta_ac3: return 3
+    if beta_t <= beta_ac2: return 2
+    if beta_t <= beta_ac1: return 1
+    return 0 # do nothing
 
 
 
@@ -252,7 +266,7 @@ include_step = test_constants.ELE_GA_INC_STEP_EVAL
 
 
 
-# 2) Recreate the *same* env config you used for PPO/DP eval
+# 2) Recreate the same env config we used for PPO/DP eval to have fair comparison
 env = create_element_env(
     horizon,
     max_cost=max_cost,
@@ -262,9 +276,9 @@ env = create_element_env(
     random_state=random_state
 )
 
-# 3) Roll out multiple episodes and average reward (same as your DP loop)
+# 3) Roll out multiple episodes and average reward (same as DP loop and PPO eval)
 logs = defaultdict(list)
-with tqdm(total=n_episodes * horizon) as pbar:
+with tqdm(total=n_episodes*horizon) as pbar:
     with set_exploration_type(explore_type), torch.no_grad():
         for _ in range(n_episodes):
             td = env.reset()
@@ -282,11 +296,13 @@ with tqdm(total=n_episodes * horizon) as pbar:
                 a = action_policy_ga(curr_obs, betas_desc, pf_array, ncs)
                 td["action"] = torch.tensor(a, dtype=torch.int64)
 
+
                 res = env.step(td)
                 observation[i]   = res["observation"].cpu().numpy()
                 action[i]        = res["action"].cpu().numpy()
                 reward[i]        = res["next","reward"].cpu().numpy()
                 td["observation"] = res["next","observation"]
+
 
             logs["observation"].append(observation)
             logs["action"].append(action)
@@ -294,13 +310,16 @@ with tqdm(total=n_episodes * horizon) as pbar:
             logs["ep reward"].append(reward.sum().item())
             pbar.update(horizon)
 
+
 print(f"Average ep reward (GA policy): {np.mean(logs['ep reward']):.4f}")
 
-# Optional: action distribution summary
+
+# action distribution summary
 all_actions = np.concatenate(logs["action"])
 id2name = {0:"Do nothing",1:"Maintenance",2:"Repair",3:"Rehabilitation",4:"Replacement"}
 unique, counts = np.unique(all_actions, return_counts=True)
 action_distribution_ga = {id2name.get(int(a), int(a)): int(c) for a, c in zip(unique, counts)}
 print("GA action distribution:", action_distribution_ga)
 
+    
 # %%

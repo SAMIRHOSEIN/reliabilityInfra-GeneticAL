@@ -10,7 +10,7 @@ from torchrl.envs.utils import ExplorationType
 ELE_CONST_HORIZON = 5
 # ELE_CONST_N_HORIZON = 1
 ELE_CONST_N_EPISODES = 1 # modified to avoid confusion
-ELE_CONST_MAX_COST = 1
+ELE_CONST_MAX_COST = 1.0
 
 # ELE_CONST_RESET_PROB = None
 # ELE_CONST_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
@@ -31,12 +31,13 @@ ELE_CUSTOM_HORIZON = 5
 ELE_CUSTOM_N_EPISODES = 1 # modified to avoid confusion
 ELE_CUSTOM_MAX_COST = 1.0
 
-ELE_CUSTOM_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_CUSTOM_DIRICHLET_ALPHA = None
-ELE_CUSTOM_RANDOM_STATE = 'off'
 # ELE_CUSTORM_RESET_PROB = None
 # ELE_CUSTORM_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
 # ELE_CUSTORM_RANDOM_STATE = 24
+ELE_CUSTOM_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+ELE_CUSTOM_DIRICHLET_ALPHA = None
+ELE_CUSTOM_RANDOM_STATE = 'off'
+
 
 ELE_CUSTOM_EXPLORE_TYPE = ExplorationType.RANDOM
 # endregion ==============================================================
@@ -96,7 +97,7 @@ ELE_PPO_MAX_GRAD_NORM = 1.0
 ELE_PPO_LR = 1e-3
 ELE_PPO_LR_MIN = 1e-5    # lr reduced to lr_min with total_frames // frames_per_batch
 ELE_PPO_EVAL_FREQ = 1
-ELE_PPO_EVAL_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
+ELE_PPO_EVAL_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be deterministic to choose greedy action because the frozen tree chooses the action with max prob
 # endregion ==============================================================
 
 
@@ -113,18 +114,19 @@ ELE_ACTOR_MAX_COST = 1.0
 ELE_ACTOR_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 ELE_ACTOR_DIRICHLET_ALPHA = None
 ELE_ACTOR_RANDOM_STATE = 'off'
+# ELE_DP_RESET_PROB = None
+# ELE_DP_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
+# ELE_DP_RANDOM_STATE = 42
 
-ELE_ACTOR_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
+ELE_ACTOR_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be deterministic to choose greedy action because the frozen tree chooses the action with max prob
 # endregion ==============================================================
 
 
 
 # region: constants for DPvsPPO.py ==================================
-ELE_DP_ACTOR_VERSION = '20250917-102249' # my model with 75 horizon
-
 ELE_DP_HORIZON = 5 #75
 ELE_DP_N_EPISODES = 1 # In DP we always consider 1 episode
-ELE_DP_MAX_COST = 1 
+ELE_DP_MAX_COST = 1.0
 
 
 ELE_DP_INC_STEP = True
@@ -142,7 +144,7 @@ ELE_DP_RANDOM_STATE = 'off'
 # ELE_DP_RANDOM_STATE = 42
 
 
-ELE_DP_EXPLORE_TYPE = ExplorationType.RANDOM
+ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 # endregion ==============================================================
 
 # region: constants for pygad_reliability.py ==================================
