@@ -7,7 +7,7 @@ from element.problem_setup import unit_costs
 from torchrl.envs.utils import ExplorationType
 
 # region: constants for ele_exp_const.py =====================================
-ELE_CONST_HORIZON = 5
+ELE_CONST_HORIZON = 1
 # ELE_CONST_N_HORIZON = 1
 ELE_CONST_N_EPISODES = 1 # modified to avoid confusion
 ELE_CONST_MAX_COST = 1.0
@@ -26,7 +26,7 @@ ELE_CONST_EXPLORE_TYPE = ExplorationType.RANDOM
 
 
 # region: constants for ele_exp_custom.py ====================================
-ELE_CUSTOM_HORIZON = 5
+ELE_CUSTOM_HORIZON = 1
 # ELE_CUSTOM_N_HORIZON = 1
 ELE_CUSTOM_N_EPISODES = 1 # modified to avoid confusion
 ELE_CUSTOM_MAX_COST = 1.0
@@ -45,7 +45,7 @@ ELE_CUSTOM_EXPLORE_TYPE = ExplorationType.RANDOM
 
 # region: constants for ele_ppo_training.py ==================================
 # env parameters
-ELE_PPO_HORIZON = 5 #75
+ELE_PPO_HORIZON = 1 #75
 ELE_PPO_INC_STEP = True
 ELE_PPO_MAX_COST = unit_costs.max()
 
@@ -104,19 +104,21 @@ ELE_PPO_EVAL_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be determi
 # region: constants for ele_exp_actor.py ====================================
 # ELE_ACTOR_VERSION = '20250505-192030'   #David's model
 # ELE_ACTOR_VERSION = '20250910-202015' # my model with 5 horizon
-ELE_ACTOR_VERSION = '20250917-102249' # my model with 75 horizon
+# ELE_ACTOR_VERSION = '20250917-102249' # my model with 75 horizon
+ELE_ACTOR_VERSION = '20250924-173308' # my model with 75 horizon
 
-ELE_ACTOR_HORIZON = 5 #75
+ELE_ACTOR_HORIZON = 1 #75
 # ELE_ACTOR_N_HORIZON = 1
 ELE_ACTOR_N_EPISODES = 1 # modified to avoid confusion
 ELE_ACTOR_MAX_COST = 1.0
 
-ELE_ACTOR_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_ACTOR_DIRICHLET_ALPHA = None
-ELE_ACTOR_RANDOM_STATE = 'off'
 # ELE_DP_RESET_PROB = None
 # ELE_DP_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
 # ELE_DP_RANDOM_STATE = 42
+ELE_ACTOR_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+ELE_ACTOR_DIRICHLET_ALPHA = None
+ELE_ACTOR_RANDOM_STATE = 'off'
+
 
 ELE_ACTOR_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be deterministic to choose greedy action because the frozen tree chooses the action with max prob
 # endregion ==============================================================
@@ -136,12 +138,13 @@ ELE_DP_INC_STEP = True
 #     ELE_DP_INPUT_DIM = NCS
 
 
-ELE_DP_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_DP_DIRICHLET_ALPHA = None
-ELE_DP_RANDOM_STATE = 'off'
 # ELE_DP_RESET_PROB = None
 # ELE_DP_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
 # ELE_DP_RANDOM_STATE = 42
+ELE_DP_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+ELE_DP_DIRICHLET_ALPHA = None
+ELE_DP_RANDOM_STATE = 'off'
+
 
 
 ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
@@ -151,7 +154,7 @@ ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 ELE_GA_SEED_FOR_PyGAD = 0
 ELE_GA_POP = 80                                             # Population size
 ELE_GA_GENS = 200                                           # Number of generations
-ELE_GA_LB_BETA, ELE_GA_UB_BETA = 0.0, 8.0                   # typical β range (pf ~ 0.5 down to ~1e-15)
+ELE_GA_LB_BETA, ELE_GA_UB_BETA = 0.0, 8.0                   # typical β range (pf ~ 0.5 down to 1e-15)
 ELE_GA_MUTATION_PERCENT_GENES = 50                          # mutate 50% of genes per solution
 ELE_GA_CROSSOVER_TYPE = "single_point"                      # single point means Only one point is used to split and recombine the genes
 ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
@@ -159,23 +162,28 @@ ELE_GA_KEEP_PARENTS = 2                                     # number of parents 
 ELE_GA_MAX_COST = unit_costs.max()
 
 # Initial distribution control (reset-style)
-ELE_GA_RESET_PROB = None
-ELE_GA_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
-ELE_GA_RANDOM_STATE = 42
 # ELE_GA_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 # ELE_GA_DIRICHLET_ALPHA = None
 # ELE_GA_RANDOM_STATE = 'off'
+ELE_GA_RESET_PROB = None
+ELE_GA_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
+ELE_GA_RANDOM_STATE = 42
 
 
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON_EVAL = 5 #75
+ELE_GA_HORIZON = 1 #75
 ELE_GA_N_EPISODES_EVAL = 1 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
+
+# ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# ELE_GA_DIRICHLET_ALPHA_EVAL = None
+# ELE_GA_RANDOM_STATE_EVAL = 'off'
 ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 ELE_GA_DIRICHLET_ALPHA_EVAL = None
 ELE_GA_RANDOM_STATE_EVAL = 'off'
+
 
 ELE_GA_INC_STEP_EVAL = True
 

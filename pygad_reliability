@@ -10,7 +10,7 @@ import time
 start_time = time.time()
 # -------------------------- Load problem setup --------------------------
 from element.problem_setup import (
-    ncs, na, gamma, horizon,
+    ncs, na, gamma,
     action_model, unit_costs, cs_pfs, failure_cost
 )
 
@@ -33,6 +33,7 @@ ELE_GA_MAX_COST = test_constants.ELE_GA_MAX_COST
 ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
 ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
 ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
+horizon = test_constants.ELE_GA_HORIZON
 # -------------------------- Prepare arrays ------------------------------
 # Keep the same shapes used in rl_env.step():
 P_actions = np.asarray(action_model, float)   # (na, ncs, ncs)
@@ -60,7 +61,7 @@ def reliability_based_action(beta_t, betas_desc):
     return 0 # do nothing
 
 
-def rollout_betas(betas_raw, state0=None): # state0 is unused now but I defined it to be able to use multiple rollouts per solution if needed and check what will change in the result
+def rollout_betas(betas_raw):
     """
     Simulate one episode over the finite horizon using β-thresholds.
     Returns:
@@ -90,7 +91,7 @@ def rollout_betas(betas_raw, state0=None): # state0 is unused now but I defined 
       fail_risk = float((pf_array @ state) * float(failure_cost))
       cost      = dir_cost + fail_risk
 
-      # reward(for inspection/comparison only)
+      # reward(for comparison only)
       discount_factor = float(gamma) ** t
       reward = discount_factor * cost_util(cost, min_cost=None, max_cost=ELE_GA_MAX_COST)
 
@@ -103,7 +104,7 @@ def rollout_betas(betas_raw, state0=None): # state0 is unused now but I defined 
       beta_series.append(beta_t)
       reward_series.append(float(reward))
 
-      # state transition s_{t+1} = P[a].T @ s_t
+      # state transition
       state = P_actions[int(action)].T @ state
       state = state / state.sum()  # normalize to fix any rounding
 
@@ -118,24 +119,11 @@ def rollout_betas(betas_raw, state0=None): # state0 is unused now but I defined 
 
     return exp_dis_cost, logs
       
-
 # -------------------------- PyGAD fitness-------------
 #must include all three parameters because PyGAD will pass them,
 def fitness_func(ga_instance, solution, solution_idx):
     exp_dis_cost, _ = rollout_betas(solution)
     return float(-exp_dis_cost)  # PyGAD maximizes fitness; we minimize cost.
-
-
-# # If you want to condier multiple rollouts per solution to reduce noise, uncomment below and comment above / if uncommnet below, I need to 
-# # remove the " state = STATE0.copy(): from rollout_betas function and pass state0 as an argument to rollout_betas function"
-# def fitness_func(ga_instance, solution, solution_idx):
-#     K = 10  # number of rollouts
-#     total_cost = 0.0
-#     for _ in range(K):
-#         state0 = np.random.dirichlet(ELE_GA_DIRICHLET_ALPHA) if ELE_GA_RANDOM_STATE != 'off' else STATE0
-#         cost, _ = rollout_betas(solution, state0=state0)
-#         total_cost += cost
-#     return -total_cost / K
 
 # -------------------------- Run GA --------------------------------------
 na_exc_zero = na - 1  # num of actions excluding 'do nothing' (action 0)
@@ -253,9 +241,8 @@ def action_policy_ga(obs, betas_desc, pf_array, ncs):
     return 0 # do nothing
 
 
-
 # load constants
-horizon = test_constants.ELE_GA_HORIZON_EVAL
+horizon = test_constants.ELE_GA_HORIZON
 n_episodes = test_constants.ELE_GA_N_EPISODES_EVAL
 max_cost = test_constants.ELE_GA_MAX_COST_EVAL
 reset_prob = test_constants.ELE_GA_RESET_PROB_EVAL
@@ -263,8 +250,6 @@ dirichlet_alpha = test_constants.ELE_GA_DIRICHLET_ALPHA_EVAL
 random_state = test_constants.ELE_GA_RANDOM_STATE_EVAL
 explore_type = test_constants.ELE_GA_EXPLORE_TYPE_EVAL
 include_step = test_constants.ELE_GA_INC_STEP_EVAL
-
-
 
 # 2) Recreate the same env config we used for PPO/DP eval to have fair comparison
 env = create_element_env(
@@ -313,13 +298,10 @@ with tqdm(total=n_episodes*horizon) as pbar:
 
 print(f"Average ep reward (GA policy): {np.mean(logs['ep reward']):.4f}")
 
-
 # action distribution summary
 all_actions = np.concatenate(logs["action"])
 id2name = {0:"Do nothing",1:"Maintenance",2:"Repair",3:"Rehabilitation",4:"Replacement"}
 unique, counts = np.unique(all_actions, return_counts=True)
 action_distribution_ga = {id2name.get(int(a), int(a)): int(c) for a, c in zip(unique, counts)}
 print("GA action distribution:", action_distribution_ga)
-
-    
 # %%
