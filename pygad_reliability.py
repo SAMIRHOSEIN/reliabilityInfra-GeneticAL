@@ -34,6 +34,13 @@ ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
 ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
 ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
 horizon = test_constants.ELE_GA_HORIZON
+print(f"GA inputs:\n"
+      f"pop={POPULATION_SIZE}\n"
+      f"gens={NUM_GENERATIONS}\n"
+      f"parent_sel='{PARENT_SELECTION}'\n"
+      f"cross='{CROSSOVER_TYPE}'\n"
+      f"mut%={MUTATION_PERCENT_GENES}\n"
+      f"keep_parents={KEEP_PARENTS}")
 # -------------------------- Prepare arrays ------------------------------
 # Keep the same shapes used in rl_env.step():
 P_actions = np.asarray(action_model, float)   # (na, ncs, ncs)
@@ -54,11 +61,26 @@ else:
 def reliability_based_action(beta_t, betas_desc):
     """betas_desc is sorted DESC: [β1 ≥ β2 ≥ β3 ≥ β4]."""
     beta_ac1, beta_ac2, beta_ac3, beta_ac4 = betas_desc
-    if beta_t <= beta_ac4: return 4
-    if beta_t <= beta_ac3: return 3
-    if beta_t <= beta_ac2: return 2
-    if beta_t <= beta_ac1: return 1
-    return 0 # do nothing
+    # Original version:
+    # if beta_t <= beta_ac4: return 4
+    # if beta_t <= beta_ac3: return 3
+    # if beta_t <= beta_ac2: return 2
+    # if beta_t <= beta_ac1: return 1
+    # return 0 # do nothing
+    # modified after discussion with David
+    if beta_t > beta_ac1:
+        action = 0  # do nothing
+    elif beta_ac2 <= beta_t < beta_ac1:
+        action = 1  # maintenance
+    elif beta_ac3 <= beta_t < beta_ac2:
+        action = 2  # repair
+    elif beta_ac4 <= beta_t < beta_ac3:
+        action = 3  # rehabilitation
+    elif beta_t <= beta_ac4:
+        action = 4  # replacement
+    else:
+        raise ValueError(f"Unexpected beta_t={beta_t} with thresholds={betas_desc}")
+    return action
 
 
 def rollout_betas(betas_raw):
@@ -234,11 +256,26 @@ def action_policy_ga(obs, betas_desc, pf_array, ncs):
     pf_t = float(np.clip(pf_array @ state_dis, 1e-12, 1 - 1e-12))
     beta_t = float(norm.ppf(1.0 - pf_t))
     beta_ac1, beta_ac2, beta_ac3, beta_ac4 = betas_desc
-    if beta_t <= beta_ac4: return 4
-    if beta_t <= beta_ac3: return 3
-    if beta_t <= beta_ac2: return 2
-    if beta_t <= beta_ac1: return 1
-    return 0 # do nothing
+    # Original version:
+    # if beta_t <= beta_ac4: return 4
+    # if beta_t <= beta_ac3: return 3
+    # if beta_t <= beta_ac2: return 2
+    # if beta_t <= beta_ac1: return 1
+    # return 0 # do nothing
+    # modified after discussion with David
+    if beta_t > beta_ac1:
+        action = 0  # do nothing
+    elif beta_ac2 <= beta_t < beta_ac1:
+        action = 1  # maintenance
+    elif beta_ac3 <= beta_t < beta_ac2:
+        action = 2  # repair
+    elif beta_ac4 <= beta_t < beta_ac3:
+        action = 3  # rehabilitation
+    elif beta_t <= beta_ac4:
+        action = 4  # replacement
+    else:
+        raise ValueError(f"Unexpected beta_t={beta_t} with thresholds={betas_desc}")
+    return action    
 
 
 # load constants
