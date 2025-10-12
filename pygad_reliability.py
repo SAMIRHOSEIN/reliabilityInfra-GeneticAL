@@ -355,7 +355,7 @@ ep0_obs = logs["observation"][0]                 # shape: (horizon, obs_dim)
 obs_dim = ep0_obs.shape[1]
 
 # If include_step_count=True, the last obs entry is normalized time; otherwise there is no time column.
-ncs_eff = int(ncs - (1 if include_step else 0))   # number of condition-state entries
+ncs_eff = int(obs_dim - (1 if include_step else 0))   # number of condition-state entries
 
 cs_traj = ep0_obs[:, :ncs_eff]                                # (horizon, ncs)
 t_traj  = ep0_obs[:, ncs_eff] if include_step else None
