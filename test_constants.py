@@ -1,9 +1,10 @@
 from turtle import st
 import numpy as np
+from scipy.stats import norm
 
 from element.problem_setup import ncs as NCS
 from element.problem_setup import na as NA
-from element.problem_setup import unit_costs
+from element.problem_setup import unit_costs, cs_pfs
 
 from torchrl.envs.utils import ExplorationType
 
@@ -156,8 +157,8 @@ ELE_ACTOR_MAX_COST = 1.0
 # ELE_DP_RESET_PROB = None
 # ELE_DP_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
 # ELE_DP_RANDOM_STATE = 42
-# ELE_ACTOR_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_ACTOR_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
+ELE_ACTOR_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# ELE_ACTOR_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
 # ELE_ACTOR_RESET_PROB = np.array([0.0, 0.8, 0.2, 0.0, 0.0])
 
 ELE_ACTOR_DIRICHLET_ALPHA = None
@@ -182,8 +183,8 @@ ELE_DP_INC_STEP = True
 # ELE_DP_RESET_PROB = None
 # ELE_DP_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
 # ELE_DP_RANDOM_STATE = 42
-# ELE_DP_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_DP_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
+ELE_DP_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# ELE_DP_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
 # ELE_DP_RESET_PROB = np.array([0.0, 0.8, 0.2, 0.0, 0.0])
 
 ELE_DP_DIRICHLET_ALPHA = None
@@ -196,7 +197,9 @@ ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 ELE_GA_SEED_FOR_PyGAD = 0
 ELE_GA_POP = 128 #80                                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
 ELE_GA_GENS = 256 #200                                      # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
-ELE_GA_LB_BETA, ELE_GA_UB_BETA = 0.0, 8.0                   # typical β range (pf ~ 0.5 down to 1e-15)
+# ELE_GA_LB_BETA, ELE_GA_UB_BETA = 2.0, 4.2                   # typical β range (pf ~ 0.5 down to 1e-15)
+ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
+ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
 
 # ELE_GA_MUTATION_PERCENT_GENES = 50                          # mutate 50% of genes per solution
 ELE_GA_MUTATION_PERCENT_GENES = 25                          # 1 gene mutated per solution(we have 4 genes and 25% of 4 is 1)
@@ -221,15 +224,15 @@ ELE_GA_DIRICHLET_ALPHA = None
 ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON = 5 #75
+ELE_GA_HORIZON = 40 #75
 ELE_GA_N_EPISODES_EVAL = 1 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
 # ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 # ELE_GA_DIRICHLET_ALPHA_EVAL = None
 # ELE_GA_RANDOM_STATE_EVAL = 'off'
-# ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-ELE_GA_RESET_PROB_EVAL = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
+ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# ELE_GA_RESET_PROB_EVAL = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
 # ELE_GA_RESET_PROB_EVAL = np.array([0.0, 0.8, 0.2, 0.0, 0.0])
 
 ELE_GA_DIRICHLET_ALPHA_EVAL = None
