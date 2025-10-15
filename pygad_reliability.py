@@ -45,11 +45,13 @@ ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
 ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
 ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
 horizon = test_constants.ELE_GA_HORIZON
+crossover_probability = test_constants.ELE_GA_CROSSOVER_PROBABILITY
 print(f"GA inputs:\n"
       f"pop={POPULATION_SIZE}\n"
       f"gens={NUM_GENERATIONS}\n"
       f"parent_sel='{PARENT_SELECTION}'\n"
       f"cross='{CROSSOVER_TYPE}'\n"
+      f"crossover_probability={crossover_probability}\n"
       f"mut%={MUTATION_PERCENT_GENES}\n"
       f"keep_parents={KEEP_PARENTS}")
 # -------------------------- Prepare arrays ------------------------------
@@ -186,6 +188,7 @@ ga = pygad.GA(
     mutation_percent_genes=MUTATION_PERCENT_GENES,
     parent_selection_type=PARENT_SELECTION,
     crossover_type=CROSSOVER_TYPE,
+    crossover_probability = crossover_probability,
     keep_parents=KEEP_PARENTS,
     random_seed=SEED,
     on_generation=on_gen

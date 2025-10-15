@@ -9,7 +9,7 @@ from element.problem_setup import unit_costs, cs_pfs
 from torchrl.envs.utils import ExplorationType
 
 # region: constants for ele_exp_const.py =====================================
-ELE_CONST_HORIZON = 1
+ELE_CONST_HORIZON = 5
 # ELE_CONST_N_HORIZON = 1
 ELE_CONST_N_EPISODES = 1 # modified to avoid confusion
 ELE_CONST_MAX_COST = 1.0
@@ -28,7 +28,7 @@ ELE_CONST_EXPLORE_TYPE = ExplorationType.RANDOM
 
 
 # region: constants for ele_exp_custom.py ====================================
-ELE_CUSTOM_HORIZON = 1
+ELE_CUSTOM_HORIZON = 5
 # ELE_CUSTOM_N_HORIZON = 1
 ELE_CUSTOM_N_EPISODES = 1 # modified to avoid confusion
 ELE_CUSTOM_MAX_COST = 1.0
@@ -60,7 +60,7 @@ ELE_PPO_DIRICHLET_ALPHA = None
 ELE_PPO_RANDOM_STATE = 'off'
 
 
-actor_model = 'nn'  # 'st', 'nn' soft tree or neural network
+actor_model = 'st'  # 'st', 'nn' soft tree or neural network
 
 
 # network parameters
@@ -145,9 +145,9 @@ ELE_PPO_EVAL_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be determi
 # ELE_ACTOR_VERSION = '20251001-134624_nn' # my model with 1 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
 # ELE_ACTOR_VERSION = '20251001-135623_st' # my model with 1 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 # ELE_ACTOR_VERSION = '20251001-141105_nn' # my model with 5 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
-# ELE_ACTOR_VERSION = '20251001-142834_st' # my model with 5 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
+ELE_ACTOR_VERSION = '20251001-142834_st' # my model with 5 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 # ELE_ACTOR_VERSION = '20251001-150733_nn' # my model with 10 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
-ELE_ACTOR_VERSION = '20251001-153504_st' # my model with 10 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
+# ELE_ACTOR_VERSION = '20251001-153504_st' # my model with 10 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 
 ELE_ACTOR_HORIZON = 5 #75
 # ELE_ACTOR_N_HORIZON = 1E
@@ -195,9 +195,9 @@ ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 
 # region: constants for pygad_reliability.py ==================================
 ELE_GA_SEED_FOR_PyGAD = 0
-ELE_GA_POP = 128 #80                                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
-ELE_GA_GENS = 256 #200                                      # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
-# ELE_GA_LB_BETA, ELE_GA_UB_BETA = 2.0, 4.2                   # typical β range (pf ~ 0.5 down to 1e-15)
+ELE_GA_POP = 512 #128 #80                                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+ELE_GA_GENS = 256 #200                                          # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+# ELE_GA_LB_BETA, ELE_GA_UB_BETA = 0.0, 8.0                     # typical β range (pf ~ 0.5 down to 1e-15)
 ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
 ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
 
@@ -206,6 +206,18 @@ ELE_GA_MUTATION_PERCENT_GENES = 25                          # 1 gene mutated per
 
 # ELE_GA_CROSSOVER_TYPE = "single_point"                      # single point means Only one point is used to split and recombine the genes(randolyn selected)
 ELE_GA_CROSSOVER_TYPE = "uniform"                           # Rationale: cause  genes are continuous β-thresholds; Randomly selects each gene from one of the parents
+
+ELE_GA_CROSSOVER_PROBABILITY = None
+if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
+    """
+    - PyGAD compares each gene in the two parent solutions.
+        - For each gene 'position':
+        - It generates a random number between 0 and 1.
+            - If that number is less than 0.7, the gene is swapped between the parents.
+            - If it's greater than or equal to 0.7, the gene is kept as-is.
+    """
+    ELE_GA_CROSSOVER_PROBABILITY = 0.7                                    # This parameter us used only in 'uniform' crossover or scattered crossover
+
 
 # ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
 ELE_GA_PARENT_SELECTION = "tournament"                      # (PyGAD defaults K_tournament=3; this typically improves pressure without killing diversity.)
@@ -224,7 +236,7 @@ ELE_GA_DIRICHLET_ALPHA = None
 ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON = 40 #75
+ELE_GA_HORIZON = 5 #40 #75
 ELE_GA_N_EPISODES_EVAL = 1 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
