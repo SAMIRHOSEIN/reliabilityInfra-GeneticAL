@@ -201,14 +201,11 @@ ELE_GA_GENS = 256 #256 #200                                          # Number of
 ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
 ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
 
-
-# ELE_GA_KEEP_PARENTS = 2                                     # number of parents to keep in the next generation    
-ELE_GA_KEEP_PARENTS = 13                                    # 10% of pop=128
+ELE_GA_KEEP_PARENTS = 13                                    # 10% of pop=128 / number of parents to keep in the next generation  
 
 # ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
 ELE_GA_PARENT_SELECTION = "tournament"                      # (PyGAD defaults K_tournament=3; this typically improves pressure without killing diversity.)
 K_TOURNAMENT=5 #3
-
 
 # ELE_GA_CROSSOVER_TYPE = "single_point"                      # single point means Only one point is used to split and recombine the genes(randolyn selected)
 ELE_GA_CROSSOVER_TYPE = "uniform"                           # Rationale: cause  genes are continuous β-thresholds; Randomly selects each gene from one of the parents
@@ -223,7 +220,6 @@ if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
             - If it's greater than or equal to 0.7, the gene is kept as-is.
     """
     ELE_GA_CROSSOVER_PROBABILITY = 0.7 #70                                   # This parameter us used only in 'uniform' crossover or scattered crossover
-
 
 
 

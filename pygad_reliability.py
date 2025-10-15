@@ -262,6 +262,14 @@ if fitness_history:
 best_betas, best_fitness, _ = ga.best_solution()
 exp_dis_cost_best, logs = rollout_betas(best_betas)
 
+
+
+print("betas_desc:", logs["betas_desc"])
+print("min/max beta over horizon:", min(logs["beta"]), max(logs["beta"]))
+print("unique actions over horizon:", sorted(set(logs["actions"])))
+
+
+
 # Convert β thresholds to probability triggers for reporting: θ = Φ(-β)
 betas_desc = np.sort(np.clip(best_betas, ELE_GA_LB_BETA, ELE_GA_UB_BETA))[::-1]
 theta_triggers = [float(norm.cdf(-b)) for b in betas_desc]
@@ -354,7 +362,7 @@ def action_policy_ga(obs, betas_desc, pf_array, ncs):
 
 
 # load constants
-horizon = test_constants.ELE_GA_HORIZON
+horizon = HORIZON
 n_episodes = test_constants.ELE_GA_N_EPISODES_EVAL
 max_cost = test_constants.ELE_GA_MAX_COST_EVAL
 reset_prob = test_constants.ELE_GA_RESET_PROB_EVAL
