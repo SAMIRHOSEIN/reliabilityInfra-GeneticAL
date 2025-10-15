@@ -46,6 +46,7 @@ ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
 ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
 horizon = test_constants.ELE_GA_HORIZON
 crossover_probability = test_constants.ELE_GA_CROSSOVER_PROBABILITY
+
 print(f"GA inputs:\n"
       f"pop={POPULATION_SIZE}\n"
       f"gens={NUM_GENERATIONS}\n"
@@ -96,6 +97,20 @@ def reliability_based_action(beta_t, betas_desc):
     return action
 
 
+
+def _repair_thresholds(betas, low=None, high=None):
+    """Sort β thresholds high→low and keep them inside [low, high]."""
+    sorted_betas = np.sort(np.asarray(betas, dtype=float))[::-1]   # enforce β1>β2>β3>β4
+    # strictly-decreasing guard (rare ties after sort):
+    eps = 1e-6
+    for i in range(len(sorted_betas)-1):
+        if sorted_betas[i] <= sorted_betas[i+1]:
+            sorted_betas[i+1] = sorted_betas[i] - eps
+    if low is not None or high is not None:
+        final_sorted_betas = np.clip(sorted_betas, low, high)                      # keep inside the defined bounds
+    return final_sorted_betas
+
+
 def rollout_betas(betas_raw):
     """
     Simulate one episode over the finite horizon using β-thresholds.
@@ -103,10 +118,12 @@ def rollout_betas(betas_raw):
       exp_dis_cost (float): expected discounted cost we minimize
       logs (dict): actions, pf, beta, reward series for inspection
     """
-    betas_raw = np.asarray(betas_raw, float)
-    betas_raw = np.clip(betas_raw, ELE_GA_LB_BETA, ELE_GA_UB_BETA) #clip due to numerical stability and if beta was very large/small, we will face issue due to np.cdf
-    betas_desc = np.sort(betas_raw)[::-1]
-    
+    # betas_raw = np.asarray(betas_raw, float)
+    # betas_raw = np.clip(betas_raw, ELE_GA_LB_BETA, ELE_GA_UB_BETA) #clip due to numerical stability and if beta was very large/small, we will face issue due to np.cdf
+    # betas_desc = np.sort(betas_raw)[::-1]
+
+    betas_desc = _repair_thresholds(betas_raw, low=ELE_GA_LB_BETA, high=ELE_GA_UB_BETA)
+
     state = STATE0.copy()   # shape (ncs,), initial state distribution = STATE0 
 
     H = int(horizon)
@@ -153,7 +170,6 @@ def rollout_betas(betas_raw):
     )
 
     return exp_dis_cost, logs
-      
 # -------------------------- PyGAD fitness-------------
 #must include all three parameters because PyGAD will pass them,
 def fitness_func(ga_instance, solution, solution_idx):

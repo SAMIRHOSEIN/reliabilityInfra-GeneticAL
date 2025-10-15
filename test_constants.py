@@ -195,8 +195,8 @@ ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 
 # region: constants for pygad_reliability.py ==================================
 ELE_GA_SEED_FOR_PyGAD = 0
-ELE_GA_POP = 512 #128 #80                                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
-ELE_GA_GENS = 256 #200                                          # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+ELE_GA_POP = 128 #128 #80                                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+ELE_GA_GENS = 256 #256 #200                                          # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
 # ELE_GA_LB_BETA, ELE_GA_UB_BETA = 0.0, 8.0                     # typical β range (pf ~ 0.5 down to 1e-15)
 ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
 ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
@@ -216,7 +216,7 @@ if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
             - If that number is less than 0.7, the gene is swapped between the parents.
             - If it's greater than or equal to 0.7, the gene is kept as-is.
     """
-    ELE_GA_CROSSOVER_PROBABILITY = 0.7                                    # This parameter us used only in 'uniform' crossover or scattered crossover
+    ELE_GA_CROSSOVER_PROBABILITY = 0.7 #70                                   # This parameter us used only in 'uniform' crossover or scattered crossover
 
 
 # ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
