@@ -44,15 +44,23 @@ ELE_GA_MAX_COST = test_constants.ELE_GA_MAX_COST
 ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
 ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
 ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
-horizon = test_constants.ELE_GA_HORIZON
-crossover_probability = test_constants.ELE_GA_CROSSOVER_PROBABILITY
+HORIZON = test_constants.ELE_GA_HORIZON
+CROSSOVER_PROBABILITY = test_constants.ELE_GA_CROSSOVER_PROBABILITY
+K_TOURNAMENT = test_constants.K_TOURNAMENT
+MUTATION_TYPE = test_constants.MUTATION_TYPE
+MUTATION_BY_REPLACEMENT = test_constants.MUTATION_BY_REPLACEMENT
+RANDOM_MUTATION_MIN_VAL = test_constants.RANDOM_MUTATION_MIN_VAL
+RANDOM_MUTATION_MAX_VAL = test_constants.RANDOM_MUTATION_MAX_VAL
+MUTATION_PROBABILITY = test_constants.MUTATION_PROBABILITY
+ELE_GA_MUTATION_PERCENT_GENES = test_constants.ELE_GA_MUTATION_PERCENT_GENES
+
 
 print(f"GA inputs:\n"
       f"pop={POPULATION_SIZE}\n"
       f"gens={NUM_GENERATIONS}\n"
       f"parent_sel='{PARENT_SELECTION}'\n"
       f"cross='{CROSSOVER_TYPE}'\n"
-      f"crossover_probability={crossover_probability}\n"
+      f"crossover_probability={CROSSOVER_PROBABILITY}\n"
       f"mut%={MUTATION_PERCENT_GENES}\n"
       f"keep_parents={KEEP_PARENTS}")
 # -------------------------- Prepare arrays ------------------------------
@@ -107,8 +115,8 @@ def _repair_thresholds(betas, low=None, high=None):
         if sorted_betas[i] <= sorted_betas[i+1]:
             sorted_betas[i+1] = sorted_betas[i] - eps
     if low is not None or high is not None:
-        final_sorted_betas = np.clip(sorted_betas, low, high)                      # keep inside the defined bounds
-    return final_sorted_betas
+        sorted_betas = np.clip(sorted_betas, low, high)                      # keep inside the defined bounds
+    return sorted_betas
 
 
 def rollout_betas(betas_raw):
@@ -126,7 +134,7 @@ def rollout_betas(betas_raw):
 
     state = STATE0.copy()   # shape (ncs,), initial state distribution = STATE0 
 
-    H = int(horizon)
+    H = int(HORIZON)
     exp_dis_cost = 0.0
     actions, pf_series, beta_series, reward_series = [], [], [], []
 
@@ -200,11 +208,16 @@ ga = pygad.GA(
     gene_space=gene_space,
     init_range_low=ELE_GA_LB_BETA,
     init_range_high=ELE_GA_UB_BETA,
-    mutation_type="random",
-    mutation_percent_genes=MUTATION_PERCENT_GENES,
-    parent_selection_type=PARENT_SELECTION,
-    crossover_type=CROSSOVER_TYPE,
-    crossover_probability = crossover_probability,
+    parent_selection_type=PARENT_SELECTION,   # parent selection
+    K_tournament=K_TOURNAMENT,                # parent selection           
+    crossover_type=CROSSOVER_TYPE,                 # crossover
+    crossover_probability=CROSSOVER_PROBABILITY,    # crossover
+    mutation_type=MUTATION_TYPE,                                # mutation
+    mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
+    mutation_probability=MUTATION_PROBABILITY,                # mutation
+    mutation_percent_genes=MUTATION_PERCENT_GENES,             # mutation
+    random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
+    random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
     keep_parents=KEEP_PARENTS,
     random_seed=SEED,
     on_generation=on_gen
@@ -270,7 +283,7 @@ report = dict(
     beta=logs["beta"],
     reward=logs["reward"],
     gamma=float(gamma),
-    horizon=int(horizon),
+    horizon=int(HORIZON),
     seed=int(SEED),
     pop=int(POPULATION_SIZE),
     gens=int(NUM_GENERATIONS),

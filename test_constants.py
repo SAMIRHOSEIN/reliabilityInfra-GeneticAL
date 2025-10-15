@@ -201,8 +201,14 @@ ELE_GA_GENS = 256 #256 #200                                          # Number of
 ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
 ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
 
-# ELE_GA_MUTATION_PERCENT_GENES = 50                          # mutate 50% of genes per solution
-ELE_GA_MUTATION_PERCENT_GENES = 25                          # 1 gene mutated per solution(we have 4 genes and 25% of 4 is 1)
+
+# ELE_GA_KEEP_PARENTS = 2                                     # number of parents to keep in the next generation    
+ELE_GA_KEEP_PARENTS = 13                                    # 10% of pop=128
+
+# ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
+ELE_GA_PARENT_SELECTION = "tournament"                      # (PyGAD defaults K_tournament=3; this typically improves pressure without killing diversity.)
+K_TOURNAMENT=5 #3
+
 
 # ELE_GA_CROSSOVER_TYPE = "single_point"                      # single point means Only one point is used to split and recombine the genes(randolyn selected)
 ELE_GA_CROSSOVER_TYPE = "uniform"                           # Rationale: cause  genes are continuous β-thresholds; Randomly selects each gene from one of the parents
@@ -219,11 +225,17 @@ if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
     ELE_GA_CROSSOVER_PROBABILITY = 0.7 #70                                   # This parameter us used only in 'uniform' crossover or scattered crossover
 
 
-# ELE_GA_PARENT_SELECTION = "sss"                             # steady-state selection
-ELE_GA_PARENT_SELECTION = "tournament"                      # (PyGAD defaults K_tournament=3; this typically improves pressure without killing diversity.)
 
-# ELE_GA_KEEP_PARENTS = 2                                     # number of parents to keep in the next generation    
-ELE_GA_KEEP_PARENTS = 13                                    # 10% of pop=128
+
+MUTATION_TYPE="random"             # mutate genes by drawing random numbers (as opposed to e.g. swap/scramble for permutations). Best for continuous genes like your β-thresholds.
+                                   # genes by either replacing them or nudging them — depending on the value of mutation_by_replacement
+MUTATION_BY_REPLACEMENT=False     # nudge instead of replace / genes by either replacing them(True) or nudging them(False)
+RANDOM_MUTATION_MIN_VAL=-0.10     # small β step (−0.10) 
+RANDOM_MUTATION_MAX_VAL=+0.10     # small β step (+0.10)
+MUTATION_PROBABILITY=0.20         # ~20% of solutions get mutated in population
+ELE_GA_MUTATION_PERCENT_GENES = 25 # 1 gene mutated per solution(we have 4 genes and 25% of 4 is 1)
+
+
 
 ELE_GA_MAX_COST = unit_costs.max()
 
