@@ -59,7 +59,7 @@ print(f"GA inputs:\n"
       f"parent_sel='{PARENT_SELECTION}'\n"
       f"cross='{CROSSOVER_TYPE}'\n"
       f"crossover_probability={CROSSOVER_PROBABILITY}\n"
-      f"mut%={MUTATION_NUM_GENES}\n"
+      f"mut(num genes)={MUTATION_NUM_GENES}\n"
       f"keep_parents={KEEP_PARENTS}\n"
       f"horizon='{HORIZON}'\n"
       f"ELE_GA_RESET_PROB={ELE_GA_RESET_PROB}\n")
@@ -201,31 +201,7 @@ def on_gen(ga_instance):
 
 
 
-# good result(I keep the following as benchmark)
-ga = pygad.GA(
-    num_generations=NUM_GENERATIONS,
-    num_parents_mating=NUM_PARENTS_MATING,
-    fitness_func=fitness_func,
-    sol_per_pop=POPULATION_SIZE,
-    num_genes=na_exc_zero,
-    gene_space=gene_space,
-    init_range_low=ELE_GA_LB_BETA,
-    init_range_high=ELE_GA_UB_BETA,
-    parent_selection_type=PARENT_SELECTION,   # parent selection
-    # K_tournament=K_TOURNAMENT,                # parent selection           
-    crossover_type=CROSSOVER_TYPE,                 # crossover
-    # crossover_probability=CROSSOVER_PROBABILITY,    # crossover
-    mutation_type=MUTATION_TYPE,                                # mutation
-    # mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
-    mutation_num_genes=MUTATION_NUM_GENES,             # mutation
-    # random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
-    # random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
-    keep_parents=KEEP_PARENTS,
-    random_seed=SEED,
-    on_generation=on_gen
-)
-
-# # the following is the same good result(benchmark) as above but with all deafult values for commented parameters above
+# # good result(I keep the following as benchmark)
 # ga = pygad.GA(
 #     num_generations=NUM_GENERATIONS,
 #     num_parents_mating=NUM_PARENTS_MATING,
@@ -236,18 +212,42 @@ ga = pygad.GA(
 #     init_range_low=ELE_GA_LB_BETA,
 #     init_range_high=ELE_GA_UB_BETA,
 #     parent_selection_type=PARENT_SELECTION,   # parent selection
-#     K_tournament=K_TOURNAMENT,                # parent selection           
+#     # K_tournament=K_TOURNAMENT,                # parent selection           
 #     crossover_type=CROSSOVER_TYPE,                 # crossover
-#     crossover_probability=CROSSOVER_PROBABILITY,    # crossover
+#     # crossover_probability=CROSSOVER_PROBABILITY,    # crossover
 #     mutation_type=MUTATION_TYPE,                                # mutation
-#     mutation_by_replacement=False,            # mutation
+#     # mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
 #     mutation_num_genes=MUTATION_NUM_GENES,             # mutation
-#     random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
-#     random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
+#     # random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
+#     # random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
 #     keep_parents=KEEP_PARENTS,
 #     random_seed=SEED,
 #     on_generation=on_gen
 # )
+
+# the following is the same good result(benchmark) as above but with all deafult values for commented parameters above
+ga = pygad.GA(
+    num_generations=NUM_GENERATIONS,
+    num_parents_mating=NUM_PARENTS_MATING,
+    fitness_func=fitness_func,
+    sol_per_pop=POPULATION_SIZE,
+    num_genes=na_exc_zero,
+    gene_space=gene_space,
+    init_range_low=ELE_GA_LB_BETA,
+    init_range_high=ELE_GA_UB_BETA,
+    parent_selection_type=PARENT_SELECTION,   # parent selection
+    K_tournament=K_TOURNAMENT,                # parent selection           
+    crossover_type=CROSSOVER_TYPE,                 # crossover
+    crossover_probability=CROSSOVER_PROBABILITY,    # crossover
+    mutation_type=MUTATION_TYPE,                                # mutation
+    mutation_by_replacement=False,            # mutation
+    mutation_num_genes=MUTATION_NUM_GENES,             # mutation
+    random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
+    random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
+    keep_parents=KEEP_PARENTS,
+    random_seed=SEED,
+    on_generation=on_gen
+)
 
 
 print("PyGAD β-threshold optimization (DP objective)")
