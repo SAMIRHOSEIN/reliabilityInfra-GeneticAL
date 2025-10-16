@@ -51,7 +51,6 @@ MUTATION_TYPE = test_constants.MUTATION_TYPE
 MUTATION_BY_REPLACEMENT = test_constants.MUTATION_BY_REPLACEMENT
 RANDOM_MUTATION_MIN_VAL = test_constants.RANDOM_MUTATION_MIN_VAL
 RANDOM_MUTATION_MAX_VAL = test_constants.RANDOM_MUTATION_MAX_VAL
-first_pygad = test_constants.first_pygad
 
 
 print(f"GA inputs:\n"
@@ -202,55 +201,53 @@ def on_gen(ga_instance):
 
 
 
-if first_pygad == "yes":
-    # good result(I keep the following as benchmark)
-    ga = pygad.GA(
-        num_generations=NUM_GENERATIONS,
-        num_parents_mating=NUM_PARENTS_MATING,
-        fitness_func=fitness_func,
-        sol_per_pop=POPULATION_SIZE,
-        num_genes=na_exc_zero,
-        gene_space=gene_space,
-        init_range_low=ELE_GA_LB_BETA,
-        init_range_high=ELE_GA_UB_BETA,
-        parent_selection_type=PARENT_SELECTION,   # parent selection
-        # K_tournament=K_TOURNAMENT,                # parent selection           
-        crossover_type=CROSSOVER_TYPE,                 # crossover
-        # crossover_probability=CROSSOVER_PROBABILITY,    # crossover
-        mutation_type=MUTATION_TYPE,                                # mutation
-        # mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
-        mutation_num_genes=MUTATION_NUM_GENES,             # mutation
-        # random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
-        # random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
-        keep_parents=KEEP_PARENTS,
-        random_seed=SEED,
-        on_generation=on_gen
-    )
+# good result(I keep the following as benchmark)
+ga = pygad.GA(
+    num_generations=NUM_GENERATIONS,
+    num_parents_mating=NUM_PARENTS_MATING,
+    fitness_func=fitness_func,
+    sol_per_pop=POPULATION_SIZE,
+    num_genes=na_exc_zero,
+    gene_space=gene_space,
+    init_range_low=ELE_GA_LB_BETA,
+    init_range_high=ELE_GA_UB_BETA,
+    parent_selection_type=PARENT_SELECTION,   # parent selection
+    # K_tournament=K_TOURNAMENT,                # parent selection           
+    crossover_type=CROSSOVER_TYPE,                 # crossover
+    # crossover_probability=CROSSOVER_PROBABILITY,    # crossover
+    mutation_type=MUTATION_TYPE,                                # mutation
+    # mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
+    mutation_num_genes=MUTATION_NUM_GENES,             # mutation
+    # random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
+    # random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
+    keep_parents=KEEP_PARENTS,
+    random_seed=SEED,
+    on_generation=on_gen
+)
 
-elif first_pygad == "no":
-# the following is the same good result(benchmark) as above but with all deafult values for commented parameters above
-    ga = pygad.GA(
-        num_generations=NUM_GENERATIONS,
-        num_parents_mating=NUM_PARENTS_MATING,
-        fitness_func=fitness_func,
-        sol_per_pop=POPULATION_SIZE,
-        num_genes=na_exc_zero,
-        gene_space=gene_space,
-        init_range_low=ELE_GA_LB_BETA,
-        init_range_high=ELE_GA_UB_BETA,
-        parent_selection_type=PARENT_SELECTION,   # parent selection
-        K_tournament=3,                # parent selection           
-        crossover_type=CROSSOVER_TYPE,                 # crossover
-        crossover_probability=CROSSOVER_PROBABILITY,    # crossover
-        mutation_type=MUTATION_TYPE,                                # mutation
-        mutation_by_replacement=False,            # mutation
-        mutation_num_genes=MUTATION_NUM_GENES,             # mutation
-        random_mutation_min_val= -1.0,            # mutation
-        random_mutation_max_val=1.0,            # mutation
-        keep_parents=KEEP_PARENTS,
-        random_seed=SEED,
-        on_generation=on_gen
-    )
+# # the following is the same good result(benchmark) as above but with all deafult values for commented parameters above
+# ga = pygad.GA(
+#     num_generations=NUM_GENERATIONS,
+#     num_parents_mating=NUM_PARENTS_MATING,
+#     fitness_func=fitness_func,
+#     sol_per_pop=POPULATION_SIZE,
+#     num_genes=na_exc_zero,
+#     gene_space=gene_space,
+#     init_range_low=ELE_GA_LB_BETA,
+#     init_range_high=ELE_GA_UB_BETA,
+#     parent_selection_type=PARENT_SELECTION,   # parent selection
+#     K_tournament=K_TOURNAMENT,                # parent selection           
+#     crossover_type=CROSSOVER_TYPE,                 # crossover
+#     crossover_probability=CROSSOVER_PROBABILITY,    # crossover
+#     mutation_type=MUTATION_TYPE,                                # mutation
+#     mutation_by_replacement=False,            # mutation
+#     mutation_num_genes=MUTATION_NUM_GENES,             # mutation
+#     random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
+#     random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
+#     keep_parents=KEEP_PARENTS,
+#     random_seed=SEED,
+#     on_generation=on_gen
+# )
 
 
 print("PyGAD β-threshold optimization (DP objective)")
