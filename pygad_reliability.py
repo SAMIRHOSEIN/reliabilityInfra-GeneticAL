@@ -59,9 +59,11 @@ print(f"GA inputs:\n"
       f"parent_sel='{PARENT_SELECTION}'\n"
       f"cross='{CROSSOVER_TYPE}'\n"
       f"crossover_probability={CROSSOVER_PROBABILITY}\n"
+      f"num_parents_mating={NUM_PARENTS_MATING}\n"  # Number of solutions to be selected as parents
+      f"mutation_type={MUTATION_TYPE}\n"
       f"mut(num genes)={MUTATION_NUM_GENES}\n"
       f"keep_parents={KEEP_PARENTS}\n"
-      f"horizon='{HORIZON}'\n"
+      f"horizon={HORIZON}\n"
       f"ELE_GA_RESET_PROB={ELE_GA_RESET_PROB}\n")
 
 # -------------------------- Prepare arrays ------------------------------
@@ -228,7 +230,7 @@ def on_gen(ga_instance):
 # the following is the same good result(benchmark) as above but with all deafult values for commented parameters above
 ga = pygad.GA(
     num_generations=NUM_GENERATIONS,
-    num_parents_mating=NUM_PARENTS_MATING,
+    num_parents_mating=NUM_PARENTS_MATING, #Number of solutions to be selected as parents
     fitness_func=fitness_func,
     sol_per_pop=POPULATION_SIZE,
     num_genes=na_exc_zero,
