@@ -62,6 +62,10 @@ ELE_PPO_RANDOM_STATE = 'off'
 
 actor_model = 'st'  # 'st', 'nn' soft tree or neural network
 
+# soft tree parameters
+depth_soft = 8 #5
+beta_soft = 1.0
+batchnorm_soft = False
 
 # network parameters
 ELE_PPO_TORCH_SEED = 0
@@ -79,11 +83,6 @@ ELE_PPO_VALUE_LAYERS = 2
 
 ELE_PPO_OUTPUT_DIM = NA
 
-
-# soft tree parameters
-depth_soft = 8 #5
-beta_soft = 1.0
-batchnorm_soft = False
 
 
 # GAE parameters
@@ -265,9 +264,6 @@ ELE_GA_EXPLORE_TYPE_EVAL = ExplorationType.DETERMINISTIC
 
 
 
-
-
-
 # ELE_GA_SEED_FOR_PyGAD = 0
 # ELE_GA_POP = 512 #512#128 #80                        # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
 # ELE_GA_GENS = 1024# 1500 #256 #256 #200               # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
@@ -339,3 +335,10 @@ ELE_GA_EXPLORE_TYPE_EVAL = ExplorationType.DETERMINISTIC
 
 # ELE_GA_EXPLORE_TYPE_EVAL = ExplorationType.DETERMINISTIC
 # # endregion ==============================================================
+
+
+# region: which actor model compared(leaning curve) for Plt_LC_nn_st.py ==================================
+ELE_ACTOR_VERSION_nn = '20251001-141105_nn'
+ELE_ACTOR_VERSION_st = '20251001-142834_st'
+WINDOW = 50  # for rolling average - integer
+# endregion ==============================================================

@@ -456,7 +456,7 @@ unique, counts = np.unique(all_actions, return_counts=True)
 action_distribution_ga = {id2name.get(int(a), int(a)): int(c) for a, c in zip(unique, counts)}
 print("GA action distribution:", action_distribution_ga)
 
-# ---- Action sequence for the single evaluation episode (t = 0..T-1 for steps actually taken) ----
+# Action sequence for the single evaluation episode (t = 0..T-1 for steps actually taken) 
 ep0_actions = logs["action"][0].astype(int).flatten()          # shape: (horizon,)
 ep0_obs     = logs["observation"][0]                           # shape: (horizon, obs_len)
 
@@ -464,7 +464,7 @@ ep0_action_names = [id2name.get(int(a), str(int(a))) for a in ep0_actions]
 print("\nEvaluation action sequence (time-ordered):")
 print(", ".join(ep0_action_names))
 
-# --- Condition-state distribution per step (episode 0) ---
+# Condition-state distribution per step (episode 0)
 ep0_obs = logs["observation"][0]                 # shape: (horizon, obs_dim)
 obs_dim = ep0_obs.shape[1]
 
