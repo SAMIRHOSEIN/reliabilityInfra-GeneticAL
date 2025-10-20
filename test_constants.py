@@ -144,7 +144,7 @@ ELE_PPO_EVAL_EXPLORE_TYPE = ExplorationType.DETERMINISTIC # This must be determi
 # ELE_ACTOR_VERSION = '20251001-134624_nn' # my model with 1 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
 # ELE_ACTOR_VERSION = '20251001-135623_st' # my model with 1 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 # ELE_ACTOR_VERSION = '20251001-141105_nn' # my model with 5 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
-ELE_ACTOR_VERSION = '20251001-142834_st' # my model with 5 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
+# ELE_ACTOR_VERSION = '20251001-142834_st' # my model with 5 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 # ELE_ACTOR_VERSION = '20251001-150733_nn' # my model with 10 horizon with reset prob [1,0,0,0,0] - neural network with 2 layers and 32 cells
 # ELE_ACTOR_VERSION = '20251001-153504_st' # my model with 10 horizon with reset prob [1,0,0,0,0] - soft tree with depth 8 and beta 1.0
 
@@ -194,8 +194,8 @@ ELE_DP_EXPLORE_TYPE = ExplorationType.DETERMINISTIC
 
 # region: constants for pygad_reliability.py ==================================
 ELE_GA_SEED_FOR_PyGAD = 0
-ELE_GA_POP = 128                            #benchmark = 128       # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
-ELE_GA_GENS = 256                           #benchmark = 256       # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+ELE_GA_POP = 128 #128                            #benchmark = 128       # Population size - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
+ELE_GA_GENS = 256 #256                           #benchmark = 256       # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
 
 ELE_GA_LB_BETA = norm.ppf(1-max(cs_pfs))  # 2.0
 ELE_GA_UB_BETA = norm.ppf(1-min(cs_pfs))  # 4.2
@@ -338,7 +338,7 @@ ELE_GA_EXPLORE_TYPE_EVAL = ExplorationType.DETERMINISTIC
 
 
 # region: which actor model compared(leaning curve) for Plt_LC_nn_st.py ==================================
-ELE_ACTOR_VERSION_nn = '20251001-141105_nn'
-ELE_ACTOR_VERSION_st = '20251001-142834_st'
-WINDOW = 50  # for rolling average - integer
+# ELE_ACTOR_VERSION_nn = '20251001-141105_nn'
+# ELE_ACTOR_VERSION_st = '20251001-142834_st'
+# WINDOW = 50  # for rolling average - integer
 # endregion ==============================================================
