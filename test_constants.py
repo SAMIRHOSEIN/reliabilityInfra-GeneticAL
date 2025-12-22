@@ -244,7 +244,7 @@ ELE_GA_DIRICHLET_ALPHA = None
 ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON = 35 #35
+ELE_GA_HORIZON = 5 #35
 ELE_GA_N_EPISODES_EVAL = 1 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
