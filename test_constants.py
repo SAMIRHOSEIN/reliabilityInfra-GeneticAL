@@ -233,30 +233,31 @@ MUTATION_NUM_GENES = 1                    # benchmark =1 / 1 number of genes to 
 ELE_GA_MAX_COST = unit_costs.max()
 
 # Initial distribution control (reset-style)
-# ELE_GA_RESET_PROB = None
-# ELE_GA_DIRICHLET_ALPHA = 0.5*np.ones(NCS)
-# ELE_GA_RANDOM_STATE = 42
-ELE_GA_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-# ELE_GA_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
-# ELE_GA_RESET_PROB = np.array([0.0, 0.0, 0.1, 0.8, 0.1])
-
-ELE_GA_DIRICHLET_ALPHA = None
-ELE_GA_RANDOM_STATE = 'off'
+ELE_GA_RESET_PROB = None
+ELE_GA_DIRICHLET_ALPHA = [0.05594704, 0.16108377, 0.05494736, 0.03863813] # For all states: [0.15481776, 0.07666929, 0.04912562, 0.03946825] #0.5*np.ones(NCS)
+ELE_GA_RANDOM_STATE = 42
+# ELE_GA_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# # ELE_GA_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
+# # ELE_GA_RESET_PROB = np.array([0.0, 0.0, 0.1, 0.8, 0.1])
+# ELE_GA_DIRICHLET_ALPHA = None
+# ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
 ELE_GA_HORIZON = 5 #35
 ELE_GA_N_EPISODES_EVAL = 1 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
+
+
+ELE_GA_RESET_PROB_EVAL = None
+ELE_GA_DIRICHLET_ALPHA_EVAL = [0.05594704, 0.16108377, 0.05494736, 0.03863813] # For all states: [0.15481776, 0.07666929, 0.04912562, 0.03946825] #0.5*np.ones(NCS)
+ELE_GA_RANDOM_STATE_EVAL = 42
+
 # ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+# # ELE_GA_RESET_PROB_EVAL = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
+# # ELE_GA_RESET_PROB_EVAL = np.array([0.0, 0.0, 0.1, 0.8, 0.1])
 # ELE_GA_DIRICHLET_ALPHA_EVAL = None
 # ELE_GA_RANDOM_STATE_EVAL = 'off'
-ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
-# ELE_GA_RESET_PROB_EVAL = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
-# ELE_GA_RESET_PROB_EVAL = np.array([0.0, 0.0, 0.1, 0.8, 0.1])
-
-ELE_GA_DIRICHLET_ALPHA_EVAL = None
-ELE_GA_RANDOM_STATE_EVAL = 'off'
 
 ELE_GA_INC_STEP_EVAL = True
 
