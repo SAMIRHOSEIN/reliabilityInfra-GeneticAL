@@ -48,7 +48,7 @@ HORIZON = test_constants.ELE_GA_HORIZON
 CROSSOVER_PROBABILITY = test_constants.ELE_GA_CROSSOVER_PROBABILITY
 K_TOURNAMENT = test_constants.K_TOURNAMENT
 MUTATION_TYPE = test_constants.MUTATION_TYPE
-MUTATION_BY_REPLACEMENT = test_constants.MUTATION_BY_REPLACEMENT
+mutation_by_replacement = test_constants.MUTATION_BY_REPLACEMENT
 RANDOM_MUTATION_MIN_VAL = test_constants.RANDOM_MUTATION_MIN_VAL
 RANDOM_MUTATION_MAX_VAL = test_constants.RANDOM_MUTATION_MAX_VAL
 
@@ -64,7 +64,10 @@ print(f"GA inputs:\n"
       f"mut(num genes)={MUTATION_NUM_GENES}\n"
       f"keep_parents={KEEP_PARENTS}\n"
       f"horizon={HORIZON}\n"
-      f"ELE_GA_RESET_PROB={ELE_GA_RESET_PROB}\n")
+      f"ELE_GA_RESET_PROB={ELE_GA_RESET_PROB}\n"
+      f"ELE_GA_DIRICHLET_ALPHA={ELE_GA_DIRICHLET_ALPHA}\n"
+      f"ELE_GA_LowerBound_BETA={ELE_GA_LB_BETA}\n"
+      f"ELE_GA_UpperBound_BETA={ELE_GA_UB_BETA}\n")
 
 # -------------------------- Prepare arrays ------------------------------
 # Keep the same shapes used in rl_env.step():
@@ -110,7 +113,7 @@ def reliability_based_action(beta_t, betas_desc):
 
 
 def _repair_thresholds(betas, low=None, high=None):
-    """Sort β thresholds high→low and keep them inside [low, high]."""
+    """Sort β thresholds high to low and keep them inside [low, high]."""
     sorted_betas = np.sort(np.asarray(betas, dtype=float))[::-1]   # enforce β1>β2>β3>β4
     # strictly-decreasing guard (rare ties after sort):
     eps = 1e-6
@@ -188,6 +191,7 @@ def fitness_func(ga_instance, solution, solution_idx):
     return float(-exp_dis_cost)  # PyGAD maximizes fitness; we minimize cost.
 
 # -------------------------- Run GA --------------------------------------
+assert na == 5, "reliability_based_action currently assumes 5 actions (4 thresholds + do-nothing)"
 na_exc_zero = na - 1  # num of actions excluding 'do nothing' (action 0)
 gene_space = [{'low': ELE_GA_LB_BETA, 'high': ELE_GA_UB_BETA} for _ in range(na_exc_zero)]
 
@@ -218,7 +222,7 @@ def on_gen(ga_instance):
 #     crossover_type=CROSSOVER_TYPE,                 # crossover
 #     # crossover_probability=CROSSOVER_PROBABILITY,    # crossover
 #     mutation_type=MUTATION_TYPE,                                # mutation
-#     # mutation_by_replacement=MUTATION_BY_REPLACEMENT,            # mutation
+#     # mutation_by_replacement=mutation_by_replacement,            # mutation
 #     mutation_num_genes=MUTATION_NUM_GENES,             # mutation
 #     # random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
 #     # random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
@@ -242,7 +246,7 @@ ga = pygad.GA(
     crossover_type=CROSSOVER_TYPE,                 # crossover
     crossover_probability=CROSSOVER_PROBABILITY,    # crossover
     mutation_type=MUTATION_TYPE,                                # mutation
-    mutation_by_replacement=False,            # mutation
+    mutation_by_replacement=mutation_by_replacement,            # mutation
     mutation_num_genes=MUTATION_NUM_GENES,             # mutation
     random_mutation_min_val=RANDOM_MUTATION_MIN_VAL,            # mutation
     random_mutation_max_val=RANDOM_MUTATION_MAX_VAL,            # mutation
@@ -399,7 +403,14 @@ random_state = test_constants.ELE_GA_RANDOM_STATE_EVAL
 explore_type = test_constants.ELE_GA_EXPLORE_TYPE_EVAL
 include_step = test_constants.ELE_GA_INC_STEP_EVAL
 
-print("ELE_GA_RESET_PROB_EVAL:", reset_prob)
+print("horizon:", horizon)
+print("n_episodes:", n_episodes)
+print("max_cost:", max_cost)
+print("reset_prob:", reset_prob)
+print("dirichlet_alpha:", dirichlet_alpha)
+print("random_state:", random_state)
+print("explore_type:", explore_type)
+print("include_step:", include_step)
 
 # 2) Recreate the same env config we used for PPO/DP eval to have fair comparison
 env = create_element_env(
@@ -530,3 +541,4 @@ leg = ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.35)
 
 plt.tight_layout()
 plt.show()
+# %%
