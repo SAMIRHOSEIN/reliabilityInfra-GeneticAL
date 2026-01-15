@@ -27,7 +27,6 @@ from element.problem_setup import (
 
 from element.utility_func import cost_util
 # -------------------------- GA & model knobs (ALL HERE) -----------------
-import test_constants
 
 #load constants
 SEED = test_constants.ELE_GA_SEED_FOR_PyGAD
@@ -75,15 +74,15 @@ P_actions = np.asarray(action_model, float)   # (na, ncs, ncs)
 Unit_costs = np.asarray(unit_costs, float)    # (na, ncs)  (we'll index Unit_costs[action] @ state)
 pf_array   = np.clip(np.asarray(cs_pfs, float), 1e-12, 1 - 1e-12)  # (ncs,)
 
-# -------------------------- Build STATE0 once (reset) -------------------
-if ELE_GA_RANDOM_STATE == 'off':
-    assert ELE_GA_RESET_PROB is not None, "ELE_GA_RESET_PROB must be set when RANDOM_STATE is 'off'."
-    STATE0 = np.asarray(ELE_GA_RESET_PROB, float).ravel()
-    assert STATE0.shape[0] == ncs and np.isclose(STATE0.sum(), 1.0), "ELE_GA_RESET_PROB must sum to 1."
-else:
-    assert ELE_GA_DIRICHLET_ALPHA is not None, "ELE_GA_DIRICHLET_ALPHA must be set when RANDOM_STATE is used."
-    rng = np.random.default_rng(ELE_GA_RANDOM_STATE)
-    STATE0 = rng.dirichlet(np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel())
+# # -------------------------- Build STATE0 once (reset) -------------------
+# if ELE_GA_RANDOM_STATE == 'off':
+#     assert ELE_GA_RESET_PROB is not None, "ELE_GA_RESET_PROB must be set when RANDOM_STATE is 'off'."
+#     STATE0 = np.asarray(ELE_GA_RESET_PROB, float).ravel()
+#     assert STATE0.shape[0] == ncs and np.isclose(STATE0.sum(), 1.0), "ELE_GA_RESET_PROB must sum to 1."
+# else:
+#     assert ELE_GA_DIRICHLET_ALPHA is not None, "ELE_GA_DIRICHLET_ALPHA must be set when RANDOM_STATE is used."
+#     rng = np.random.default_rng(ELE_GA_RANDOM_STATE)
+#     STATE0 = rng.dirichlet(np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel())
 
 # -------------------------- Policy & rollout ----------------------------
 def reliability_based_action(beta_t, betas_desc):
@@ -125,54 +124,137 @@ def _repair_thresholds(betas, low=None, high=None):
     return sorted_betas
 
 
-def rollout_betas(betas_raw):
+
+
+# def rollout_betas(betas_raw):
+#     """
+#     Simulate one episode over the finite horizon using β-thresholds.
+#     Returns:
+#       exp_dis_cost (float): expected discounted cost we minimize
+#       logs (dict): actions, pf, beta, reward series for inspection
+#     """
+#     # betas_raw = np.asarray(betas_raw, float)
+#     # betas_raw = np.clip(betas_raw, ELE_GA_LB_BETA, ELE_GA_UB_BETA) #clip due to numerical stability and if beta was very large/small, we will face issue due to np.cdf
+#     # betas_desc = np.sort(betas_raw)[::-1]
+
+#     betas_desc = _repair_thresholds(betas_raw, low=ELE_GA_LB_BETA, high=ELE_GA_UB_BETA)
+
+#     state = STATE0.copy()   # shape (ncs,), initial state distribution = STATE0 
+
+#     H = int(HORIZON)
+#     exp_dis_cost = 0.0
+#     actions, pf_series, beta_series, reward_series = [], [], [], []
+
+#     for t in range(H):
+#       # prob of failure and reliability index at time t
+#       pf_t= float(np.clip(pf_array @ state, 1e-12, 1-1e-12))    #clip due to numerical stability(norm.ppf(1) and norm.ppf(0) are inf) and keep the serch practical.
+#       beta_t = float(norm.ppf(1.0 - pf_t))
+
+#       # choose action with thresholds
+#       action = reliability_based_action(beta_t, betas_desc)
+
+#       # cost
+#       dir_cost  = float(Unit_costs[int(action)] @ state)
+#       fail_risk = float((pf_array @ state) * float(failure_cost))
+#       cost      = dir_cost + fail_risk
+
+#       # reward(for comparison only)
+#       discount_factor = float(gamma) ** t
+#       reward = discount_factor * cost_util(cost, min_cost=None, max_cost=ELE_GA_MAX_COST)
+
+#       # objective func
+#       exp_dis_cost += discount_factor * cost
+
+#       #log
+#       actions.append(int(action))
+#       pf_series.append(pf_t)
+#       beta_series.append(beta_t)
+#       reward_series.append(float(reward))
+
+#       # state transition
+#       state = P_actions[int(action)].T @ state
+#       state = state / state.sum()  # normalize to fix any rounding
+
+#     logs = dict(
+#         betas_desc=betas_desc.tolist(),
+#         actions=actions,
+#         pf=pf_series,
+#         beta=beta_series,
+#         reward=reward_series,
+#         exp_dis_cost=float(exp_dis_cost)
+#     )
+
+#     return exp_dis_cost, logs
+
+
+
+
+
+
+# -------------------------- Fixed initial state per population slot  --------------------------
+if ELE_GA_RANDOM_STATE == 'off':
+    raise ValueError(
+        "You asked for different initial states per chromosome, "
+        "but ELE_GA_RANDOM_STATE='off' implies a fixed reset_prob. "
+        "Set ELE_GA_RANDOM_STATE to an int seed and provide ELE_GA_DIRICHLET_ALPHA."
+    )
+
+assert ELE_GA_DIRICHLET_ALPHA is not None, "Need ELE_GA_DIRICHLET_ALPHA to sample initial states."
+alpha0 = np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel()
+
+rng_init = np.random.default_rng(ELE_GA_RANDOM_STATE)  # reproducible
+STATE0_POOL = np.vstack([rng_init.dirichlet(alpha0) for _ in range(POPULATION_SIZE)]).astype(np.float32)
+# STATE0_POOL[i] is the fixed initial state for solution_idx=i across all generations
+
+
+
+
+def rollout_betas(betas_raw, state0=None):
     """
     Simulate one episode over the finite horizon using β-thresholds.
     Returns:
-      exp_dis_cost (float): expected discounted cost we minimize
+    exp_dis_cost: discounted expected cost under state-distribution propagation, conditioned on a given initial distribution state0.
       logs (dict): actions, pf, beta, reward series for inspection
     """
-    # betas_raw = np.asarray(betas_raw, float)
-    # betas_raw = np.clip(betas_raw, ELE_GA_LB_BETA, ELE_GA_UB_BETA) #clip due to numerical stability and if beta was very large/small, we will face issue due to np.cdf
-    # betas_desc = np.sort(betas_raw)[::-1]
-
+        
     betas_desc = _repair_thresholds(betas_raw, low=ELE_GA_LB_BETA, high=ELE_GA_UB_BETA)
 
-    state = STATE0.copy()   # shape (ncs,), initial state distribution = STATE0 
+
+    state = np.asarray(state0, dtype=float).copy()
 
     H = int(HORIZON)
     exp_dis_cost = 0.0
     actions, pf_series, beta_series, reward_series = [], [], [], []
 
     for t in range(H):
-      # prob of failure and reliability index at time t
-      pf_t= float(np.clip(pf_array @ state, 1e-12, 1-1e-12))    #clip due to numerical stability(norm.ppf(1) and norm.ppf(0) are inf) and keep the serch practical.
-      beta_t = float(norm.ppf(1.0 - pf_t))
+        # prob of failure and reliability index at time t
+        pf_t = float(np.clip(pf_array @ state, 1e-12, 1 - 1e-12))
+        beta_t = float(norm.ppf(1.0 - pf_t))
 
-      # choose action with thresholds
-      action = reliability_based_action(beta_t, betas_desc)
+        # choose action with thresholds
+        action = reliability_based_action(beta_t, betas_desc)
 
-      # cost
-      dir_cost  = float(Unit_costs[int(action)] @ state)
-      fail_risk = float((pf_array @ state) * float(failure_cost))
-      cost      = dir_cost + fail_risk
+        # cost
+        dir_cost  = float(Unit_costs[int(action)] @ state)
+        fail_risk = float((pf_array @ state) * float(failure_cost))
+        cost      = dir_cost + fail_risk
 
-      # reward(for comparison only)
-      discount_factor = float(gamma) ** t
-      reward = discount_factor * cost_util(cost, min_cost=None, max_cost=ELE_GA_MAX_COST)
+        # reward(for comparison only)
+        discount_factor = float(gamma) ** t
+        reward = discount_factor * cost_util(cost, min_cost=None, max_cost=ELE_GA_MAX_COST)
 
-      # objective func
-      exp_dis_cost += discount_factor * cost
+        # objective func
+        exp_dis_cost += discount_factor * cost
+        
+        #log
+        actions.append(int(action))
+        pf_series.append(pf_t)
+        beta_series.append(beta_t)
+        reward_series.append(float(reward))
 
-      #log
-      actions.append(int(action))
-      pf_series.append(pf_t)
-      beta_series.append(beta_t)
-      reward_series.append(float(reward))
-
-      # state transition
-      state = P_actions[int(action)].T @ state
-      state = state / state.sum()  # normalize to fix any rounding
+        # state transition
+        state = P_actions[int(action)].T @ state
+        state = state / state.sum() # normalize to fix any rounding
 
     logs = dict(
         betas_desc=betas_desc.tolist(),
@@ -182,28 +264,91 @@ def rollout_betas(betas_raw):
         reward=reward_series,
         exp_dis_cost=float(exp_dis_cost)
     )
-
     return exp_dis_cost, logs
-# -------------------------- PyGAD fitness-------------
-#must include all three parameters because PyGAD will pass them,
-def fitness_func(ga_instance, solution, solution_idx):
-    exp_dis_cost, _ = rollout_betas(solution)
-    return float(-exp_dis_cost)  # PyGAD maximizes fitness; we minimize cost.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # -------------------------- PyGAD fitness-------------
+# #must include all three parameters because PyGAD will pass them,
+# def fitness_func(ga_instance, solution, solution_idx):
+#     exp_dis_cost, _ = rollout_betas(solution)
+#     return float(-exp_dis_cost)  # PyGAD maximizes fitness; we minimize cost.
+
+
+
+
+
+
+def fitness_func(ga_instance, solution, solution_idx): # solution_idx is the index of solution in population
+    state0 = STATE0_POOL[solution_idx]  # fixed per slot, reproducible across generations
+    exp_dis_cost, _ = rollout_betas(solution, state0=state0)
+    return float(-exp_dis_cost)
+
+
+
+
+
+
+
+
+
 
 # -------------------------- Run GA --------------------------------------
 assert na == 5, "reliability_based_action currently assumes 5 actions (4 thresholds + do-nothing)"
 na_exc_zero = na - 1  # num of actions excluding 'do nothing' (action 0)
 gene_space = [{'low': ELE_GA_LB_BETA, 'high': ELE_GA_UB_BETA} for _ in range(na_exc_zero)]
 
-# To plot learning curve, we will record the best fitness per generation
+# To plot learning curve, we will record the best fitness per generation and also 
+# we need to plot Mean/median shows whether the whole population is improving or only one 'lucky superstar' is improving
 fitness_history = []
+mean_fitness_history = []
+median_fitness_history = []
+
 
 # An optional parameter named on_generation is supported which allows the user to call a function (with a single parameter) after each generation
 # Ref:https://pygad.readthedocs.io/en/latest/pygad.html#the-on-generation-parameter 
+# def on_gen(ga_instance):
+#     """Record the best fitness after each generation."""
+#     _, best_fitness, _ = ga_instance.best_solution()
+#     fitness_history.append(best_fitness)
+
+
+
 def on_gen(ga_instance):
-    """Record the best fitness after each generation."""
-    _, best_fitness, _ = ga_instance.best_solution()
-    fitness_history.append(best_fitness)
+    """Track best/mean/median fitness per generation to diagnose convergence and diversity."""
+    pop_fitness = np.asarray(ga_instance.last_generation_fitness, dtype=float)
+
+    # Best of current generation:
+    fitness_history.append(float(np.max(pop_fitness)))
+
+    # Central tendency of population:
+    mean_fitness_history.append(float(np.mean(pop_fitness)))
+    median_fitness_history.append(float(np.median(pop_fitness)))
+
+
+
+
+
+
+
+
+
 
 
 
@@ -256,7 +401,7 @@ ga = pygad.GA(
 )
 
 
-print("PyGAD β-threshold optimization (DP objective)")
+print("PyGAD β-threshold optimization (minimize discounted expected cost)")
 ga.run()
 
 
@@ -273,7 +418,6 @@ if fitness_history:
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
     plt.show()
-    print("Saved GA learning curve to ga_learning_curve.png")
 
     initial_best_cost = float(best_cost_per_gen[0])
     final_best_cost = float(best_cost_per_gen.min())
@@ -290,9 +434,85 @@ if fitness_history:
         print(f"Relative improvement: {relative_improvement:.4f}%")
 
 
+
+
+
+if fitness_history:
+    generations = np.arange(1, len(fitness_history) + 1)
+
+    # best_cost   = -np.asarray(fitness_history, dtype=float)
+    mean_cost   = -np.asarray(mean_fitness_history, dtype=float)
+    median_cost = -np.asarray(median_fitness_history, dtype=float)
+
+    plt.figure(figsize=(9, 5))
+    # plt.plot(generations, best_cost, marker='o', linewidth=1.5, label="Best (elitist) cost")
+    plt.plot(generations, mean_cost, linewidth=1.5, label="Mean population cost")
+    plt.plot(generations, median_cost, linewidth=1.5, label="Median population cost")
+
+    plt.title("GA convergence diagnostics: best vs population mean/median\n"
+              "Mean/median reveal whether improvement is global (healthy) or only in a few elites (risk of premature convergence).")
+    plt.xlabel("Generation")
+    plt.ylabel("Discounted expected cost (lower is better)")
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # -------------------------- Report best solution ------------------------
+# best_betas, best_fitness, _ = ga.best_solution()
+# exp_dis_cost_best, logs = rollout_betas(best_betas)
+
+
+
 best_betas, best_fitness, _ = ga.best_solution()
-exp_dis_cost_best, logs = rollout_betas(best_betas)
+
+# Report: mean objective across the same fixed initial-state panel used in fitness().
+costs = []
+for i in range(POPULATION_SIZE):
+    c, _ = rollout_betas(best_betas, state0=STATE0_POOL[i])
+    costs.append(c)
+exp_dis_cost_best = float(np.mean(costs))
+exp_dis_cost_std  = float(np.std(costs))
+
+# Logs: show one representative rollout (slot 0) for interpretability prints.
+_, logs = rollout_betas(best_betas, state0=STATE0_POOL[0])
+
+print(f"Best policy cost mean over STATE0_POOL: {exp_dis_cost_best:.6f} (std={exp_dis_cost_std:.6f})")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -303,8 +523,9 @@ print("unique actions over horizon:", sorted(set(logs["actions"])))
 
 
 # Convert β thresholds to probability triggers for reporting: θ = Φ(-β)
-betas_desc = np.sort(np.clip(best_betas, ELE_GA_LB_BETA, ELE_GA_UB_BETA))[::-1]
+betas_desc = _repair_thresholds(best_betas, low=ELE_GA_LB_BETA, high=ELE_GA_UB_BETA)
 theta_triggers = [float(norm.cdf(-b)) for b in betas_desc]
+
 
 print("\n--- Best Policy (β thresholds) ---")
 print(f"β (desc): {betas_desc.tolist()}")
@@ -367,7 +588,17 @@ pf_array = np.asarray(cs_pfs, float)  # shape (ncs,)
 
 def action_policy_ga(obs, betas_desc, pf_array, ncs):
     """Map observation -> GA action via reliability thresholds."""
-    state_dis = np.asarray(obs[:ncs], float)
+
+    # in the eval loop, curr_obs = td["observation"] is a torch.Tensor. 
+    # np.asarray(torch_tensor) can produce an object array or silently behave oddly depending on dtype/device.
+    # SO I need to convert to numpy explicitly.
+    if torch.is_tensor(obs):
+        obs_np = obs.detach().cpu().numpy()
+    else:
+        obs_np = np.asarray(obs, dtype=float)
+
+
+    state_dis = np.asarray(obs_np[:ncs], float)
     pf_t = float(np.clip(pf_array @ state_dis, 1e-12, 1 - 1e-12))
     beta_t = float(norm.ppf(1.0 - pf_t))
     beta_ac1, beta_ac2, beta_ac3, beta_ac4 = betas_desc
