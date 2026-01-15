@@ -22,7 +22,7 @@ ELE_GA_UB_BETA = norm.ppf(1.0 - min(cs_pfs))  # ~4.2
 
 # ----------------------------- 1) Elitism and Parent Selection -----------------------------
 # Parent survival (elitism-like). number of parents to keep in the next generation  .
-ELE_GA_KEEP_PARENTS = 10 #2 # ~8% of pop (512) - It means 512 - 40 = 472 offspring are created per generation and 40 parents are directly carried over to the next generation.
+ELE_GA_KEEP_PARENTS = 10 # ~2% of pop(512): 512-10=502 offspring created per generation and 10 parents are directly carried over to the next generation.
 
 
 
@@ -126,16 +126,16 @@ ELE_GA_CROSSOVER_TYPE = "uniform"                    #deafult = crossover_type="
 
 ELE_GA_CROSSOVER_PROBABILITY = None  #  if None => 100% of mating pairs crossover
 
-ELE_GA_CROSSOVER_PROBABILITY = None
-if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
-    """
-    - PyGAD compares each gene in the two parent solutions.
-        - For each gene 'position':
-        - It generates a random number between 0 and 1.
-            - If that number is less than 0.7, the gene is swapped between the parents.
-            - If it's greater than or equal to 0.7, the gene is kept as-is.
-    """
-    ELE_GA_CROSSOVER_PROBABILITY = None       #default = None(None means crossover is applied to every mating pair)  - This parameter is used only in 'uniform' crossover or scattered crossover
+# ELE_GA_CROSSOVER_PROBABILITY = None
+# if ELE_GA_CROSSOVER_TYPE == "uniform" or ELE_GA_CROSSOVER_TYPE == "scattered":
+#     """
+#     - PyGAD compares each gene in the two parent solutions.
+#         - For each gene 'position':
+#         - It generates a random number between 0 and 1.
+#             - If that number is less than 0.7, the gene is swapped between the parents.
+#             - If it's greater than or equal to 0.7, the gene is kept as-is.
+#     """
+#     ELE_GA_CROSSOVER_PROBABILITY = None       #default = None(None means crossover is applied to every mating pair)  - This parameter is used only in 'uniform' crossover or scattered crossover
 
 
 # ----------------------------- 3) Mutation (random + nudge) -----------------------------

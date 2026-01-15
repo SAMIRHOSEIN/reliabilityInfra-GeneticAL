@@ -111,17 +111,29 @@ def reliability_based_action(beta_t, betas_desc):
 
 
 
+
+
 def _repair_thresholds(betas, low=None, high=None):
-    """Sort β thresholds high to low and keep them inside [low, high]."""
-    sorted_betas = np.sort(np.asarray(betas, dtype=float))[::-1]   # enforce β1>β2>β3>β4
-    # strictly-decreasing guard (rare ties after sort):
-    eps = 1e-6
-    for i in range(len(sorted_betas)-1):
-        if sorted_betas[i] <= sorted_betas[i+1]:
-            sorted_betas[i+1] = sorted_betas[i] - eps
+    """Clip -> sort high to low -> enforce strict decrease (robust)."""
+    x = np.asarray(betas, dtype=float)
+
     if low is not None or high is not None:
-        sorted_betas = np.clip(sorted_betas, low, high)                      # keep inside the defined bounds
-    return sorted_betas
+        x = np.clip(x, low, high) # keep inside the defined bounds
+
+    x = np.sort(x)[::-1] # enforce β1>β2>β3>β4
+
+    eps = 1e-6
+    for i in range(len(x) - 1):
+        if x[i] <= x[i + 1]:
+            x[i + 1] = x[i] - eps
+
+    # if strictness pushed below low, re-clip + re-enforce from the end
+    if low is not None:
+        x[-1] = max(x[-1], low)
+        for i in range(len(x) - 2, -1, -1):
+            x[i] = max(x[i], x[i + 1] + eps)
+
+    return x
 
 
 
@@ -205,7 +217,6 @@ alpha0 = np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel()
 rng_init = np.random.default_rng(ELE_GA_RANDOM_STATE)  # reproducible
 STATE0_POOL = np.vstack([rng_init.dirichlet(alpha0) for _ in range(POPULATION_SIZE)]).astype(np.float32)
 # STATE0_POOL[i] is the fixed initial state for solution_idx=i across all generations
-
 
 
 
@@ -302,6 +313,21 @@ def fitness_func(ga_instance, solution, solution_idx): # solution_idx is the ind
 
 
 
+
+
+
+# the following line is for all chormosome in all generation has 32 fix inital states
+# EVAL_PANEL_SIZE = 32  # 16–64 is typical; tradeoff speed vs stability
+# rng_panel = np.random.default_rng(SEED)
+# EVAL_PANEL_IDX = rng_panel.choice(POPULATION_SIZE, size=EVAL_PANEL_SIZE, replace=False)
+
+
+# def fitness_func(ga_instance, solution, solution_idx):
+#     costs = []
+#     for idx in EVAL_PANEL_IDX:
+#         c, _ = rollout_betas(solution, state0=STATE0_POOL[idx])
+#         costs.append(c)
+#     return float(-np.mean(costs))
 
 
 
