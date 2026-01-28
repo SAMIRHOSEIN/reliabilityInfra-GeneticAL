@@ -714,7 +714,16 @@ with tqdm(total=n_episodes*horizon) as pbar:
             pbar.update(horizon)
 
 
-print(f"Average ep reward (GA policy): {np.mean(logs['ep reward']):.4f}")
+# print(f"Average ep reward (GA policy): {np.mean(logs['ep reward']):.4f}")
+ep_rewards = np.asarray(logs["ep reward"], dtype=float)
+mean_ep_reward = ep_rewards.mean()
+std_ep_reward  = ep_rewards.std()
+
+print(
+    f"Average ep reward (GA policy): "
+    f"{mean_ep_reward:.4f} ± {std_ep_reward:.4f}"
+)
+
 
 #%%
 # action distribution summary
@@ -742,6 +751,10 @@ ncs_eff = int(obs_dim - (1 if include_step else 0))   # number of condition-stat
 cs_traj = ep0_obs[:, :ncs_eff]                                # (horizon, ncs)
 t_traj  = ep0_obs[:, ncs_eff] if include_step else None
 
+
+
+
+
 print("\nCondition-state distribution per step (episode 0):")
 for t, (cs, a) in enumerate(zip(cs_traj, ep0_actions)):
     cs_str = ", ".join([f"cs{k}={p:.3f}" for k, p in enumerate(cs)])
@@ -750,6 +763,59 @@ for t, (cs, a) in enumerate(zip(cs_traj, ep0_actions)):
         print(f"Step={t:02d}  t={t_traj[t]:.3f}  action={id2name[int(a)]:<14} [{cs_str}]")
     else:
         print(f"Step={t:02d}  act={id2name[int(a)]:<14} [{cs_str}]")
+
+
+
+
+
+
+
+
+
+print("\nCondition-state distribution per step (first 3 episodes):")
+
+n_print = min(5, len(logs["observation"]))
+
+for ep in range(n_print):
+    print(f"\n=== Episode {ep} ===")
+
+    ep_obs     = logs["observation"][ep]                  # (horizon, obs_dim)
+    ep_actions = logs["action"][ep].astype(int).flatten()  # (horizon,)
+
+    # --- rewards (per-step), return, avg ---
+    ep_rewards = logs["reward"][ep].astype(float).flatten()
+    ep_return  = ep_rewards.sum()
+    ep_avg     = ep_rewards.mean()
+
+    # --- initial state (from step 0 observation) ---
+    init_state = ep_obs[0, :ncs]   # first ncs entries are CS distribution
+    init_str = ", ".join([f"cs{k}={p:.3f}" for k, p in enumerate(init_state)])
+
+    print(f"Episode {ep}: return(sum)={ep_return:.4f} | avg/step={ep_avg:.6f}")
+    print(f"Initial state: [{init_str}]")
+
+    # --- per-step CS distribution + action ---
+    obs_dim = ep_obs.shape[1]
+    ncs_eff = int(obs_dim - (1 if include_step else 0))
+
+    cs_traj = ep_obs[:, :ncs_eff]
+    t_traj  = ep_obs[:, ncs_eff] if include_step else None
+
+    for t, (cs, a) in enumerate(zip(cs_traj, ep_actions)):
+        cs_str = ", ".join([f"cs{k}={p:.3f}" for k, p in enumerate(cs)])
+        if t_traj is not None:
+            print(f"Step={t:02d}  t={t_traj[t]:.3f}  action={id2name[int(a)]:<14} [{cs_str}]")
+        else:
+            print(f"Step={t:02d}  action={id2name[int(a)]:<14} [{cs_str}]")
+
+
+
+
+
+
+
+
+
 
 
 # %%
@@ -798,4 +864,43 @@ leg = ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.35)
 
 plt.tight_layout()
 plt.show()
+# %%
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set(style="white", context="talk")
+
+beta_min = 2.5
+beta_max = 4.2
+
+gap = (beta_max - beta_min) / 5.0
+beta_levels = beta_max - gap * np.arange(1, 5)
+labels = ["Beta1", "Beta2", "Beta3", "Beta4"]
+
+steps = np.linspace(0, 10, 200)
+beta_bridge = beta_max - (beta_max - beta_min) * (steps / steps.max())**2
+
+plt.figure(figsize=(10, 6))
+
+for beta, label in zip(beta_levels, labels):
+    plt.hlines(beta, xmin=0, xmax=10,
+               linestyles='--', linewidth=2, color='black')
+    plt.text(10.2, beta, label, va='center', color='black')
+
+plt.plot(steps, beta_bridge, linewidth=3, color='black')
+
+plt.xlabel("step")
+plt.ylabel("β_bridge")
+
+plt.ylim(beta_min, beta_max)
+plt.xlim(0, 10)
+
+plt.grid(False)
+
+sns.despine(left=True, bottom=True)
+
+plt.tight_layout()
+plt.show()
+
 # %%
