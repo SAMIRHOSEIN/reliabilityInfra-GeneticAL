@@ -754,10 +754,13 @@ init_beta = -norm.ppf(init_pf)  # shape: (n_episodes,)
 # plotted LCC = flip the sign of episode reward
 lcc_values = -np.array(logs["ep reward"])
 
+# normalize LCC by episode length
+LCC_norm = lcc_values / horizon
+
 # save data used for the scatter plot
 plot_df = pd.DataFrame({
     "initial_beta": init_beta,
-    "LCC": lcc_values
+    "LCC_norm": LCC_norm
 })
 
 csv_path = os.path.join(os.getcwd(), "initial_beta_vs_LCC_GA_policy.csv")
@@ -769,14 +772,14 @@ fig, ax = plt.subplots(figsize=(7, 5))
 
 sns.scatterplot(
     x=init_beta,
-    y=lcc_values,
+    y=LCC_norm,
     ax=ax
 )
 # ax.set_ylim(0, 0.2e6)
 
 ax.set_xlabel("Initial β")
-ax.set_ylabel("LCC")
-plt.title("Initial β vs LCC (GA policy)")
+ax.set_ylabel("LCC / max_steps")
+plt.title("Initial β vs LCC/max step (GA policy)")
 
 ax.grid(True, alpha=0.3)
 
