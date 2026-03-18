@@ -13,10 +13,18 @@ from matplotlib import colors as mcolors
 import torch
 from collections import defaultdict
 from tqdm import tqdm
+
+
+from torchrl.envs import GymWrapper
 from torchrl.envs.utils import set_exploration_type
-from torchrl_bridge import create_element_env
-from element.problem_setup import ncs, cs_pfs
+from bridge_gym.example_nbe107.rl_env import SingleElement
+from bridge_gym.example_nbe107.settings import (
+    NCS, NA, CS_PFS, FAILURE_COST, ACTION_MODEL, UNIT_COSTS
+)
+# from bridge_gym.example_nbe107.cost_util import normalized_cost
 import test_constants
+
+
 import sys
 
 
@@ -24,15 +32,20 @@ import pandas as pd
 import seaborn as sns
 import os
 
-
 start_time = time.time()
-# -------------------------- Load problem setup --------------------------
-from element.problem_setup import (
-    ncs, na, gamma,
-    action_model, unit_costs, cs_pfs, failure_cost
-)
 
-from element.utility_func import cost_util
+
+# -------------------------- inputs --------------------------
+gamma = test_constants.gamma
+ncs = NCS
+na = NA
+
+action_model = ACTION_MODEL
+unit_costs = UNIT_COSTS
+cs_pfs = CS_PFS
+failure_cost = FAILURE_COST
+
+
 # -------------------------- GA & model knobs (ALL HERE) -----------------
 
 #load constants
@@ -46,10 +59,10 @@ PARENT_SELECTION = test_constants.ELE_GA_PARENT_SELECTION
 KEEP_PARENTS = test_constants.ELE_GA_KEEP_PARENTS
 ELE_GA_LB_BETA = test_constants.ELE_GA_LB_BETA
 ELE_GA_UB_BETA = test_constants.ELE_GA_UB_BETA
-ELE_GA_MAX_COST = test_constants.ELE_GA_MAX_COST
+# ELE_GA_MAX_COST = test_constants.ELE_GA_MAX_COST
 ELE_GA_RANDOM_STATE = test_constants.ELE_GA_RANDOM_STATE
 ELE_GA_RESET_PROB = test_constants.ELE_GA_RESET_PROB
-ELE_GA_DIRICHLET_ALPHA = test_constants.ELE_GA_DIRICHLET_ALPHA
+ELE_GA_DIRICHLET_ALPHA_TRAIN = test_constants.ELE_DP_DIRICHLET_ALPHA_Train
 HORIZON = test_constants.ELE_GA_HORIZON
 CROSSOVER_PROBABILITY = test_constants.ELE_GA_CROSSOVER_PROBABILITY
 K_TOURNAMENT = test_constants.K_TOURNAMENT
@@ -71,7 +84,7 @@ print(f"GA inputs:\n"
       f"keep_parents={KEEP_PARENTS}\n"
       f"horizon={HORIZON}\n"
       f"ELE_GA_RESET_PROB={ELE_GA_RESET_PROB}\n"
-      f"ELE_GA_DIRICHLET_ALPHA={ELE_GA_DIRICHLET_ALPHA}\n"
+      f"ELE_GA_DIRICHLET_ALPHA={ELE_GA_DIRICHLET_ALPHA_TRAIN}\n"
       f"ELE_GA_LowerBound_BETA={ELE_GA_LB_BETA}\n"
       f"ELE_GA_UpperBound_BETA={ELE_GA_UB_BETA}\n")
 
@@ -215,11 +228,11 @@ if ELE_GA_RANDOM_STATE == 'off':
     raise ValueError(
         "You asked for different initial states per chromosome, "
         "but ELE_GA_RANDOM_STATE='off' implies a fixed reset_prob. "
-        "Set ELE_GA_RANDOM_STATE to an int seed and provide ELE_GA_DIRICHLET_ALPHA."
+        "Set ELE_GA_RANDOM_STATE to an int seed and provide ELE_GA_DIRICHLET_ALPHA_TRAIN."
     )
 
-assert ELE_GA_DIRICHLET_ALPHA is not None, "Need ELE_GA_DIRICHLET_ALPHA to sample initial states."
-alpha0 = np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel()
+assert ELE_GA_DIRICHLET_ALPHA_TRAIN is not None, "Need ELE_GA_DIRICHLET_ALPHA to sample initial states."
+alpha0 = np.asarray(ELE_GA_DIRICHLET_ALPHA_TRAIN, float).ravel()
 
 rng_init = np.random.default_rng(ELE_GA_RANDOM_STATE)  # reproducible
 STATE0_POOL = np.vstack([rng_init.dirichlet(alpha0) for _ in range(POPULATION_SIZE)]).astype(np.float32)
@@ -259,7 +272,7 @@ def rollout_betas(betas_raw, state0=None):
 
         # reward(for comparison only)
         discount_factor = float(gamma) ** t
-        reward = discount_factor * cost_util(cost, min_cost=None, max_cost=ELE_GA_MAX_COST)
+        reward = discount_factor * cost #normalized_cost(cost, normalizer=ELE_GA_MAX_COST)
 
         # objective func
         exp_dis_cost += discount_factor * cost
@@ -587,8 +600,8 @@ report = dict(
         init_state=None,
         dirichlet_alpha=(
             None if ELE_GA_RANDOM_STATE == 'off'
-            else (ELE_GA_DIRICHLET_ALPHA if np.isscalar(ELE_GA_DIRICHLET_ALPHA)
-                  else np.asarray(ELE_GA_DIRICHLET_ALPHA, float).ravel().tolist())
+            else (ELE_GA_DIRICHLET_ALPHA_TRAIN if np.isscalar(ELE_GA_DIRICHLET_ALPHA_TRAIN)
+                  else np.asarray(ELE_GA_DIRICHLET_ALPHA_TRAIN, float).ravel().tolist())
         ),
         dirichlet_seed=None if ELE_GA_RANDOM_STATE == 'off' else int(ELE_GA_RANDOM_STATE)
     )
@@ -660,31 +673,42 @@ def action_policy_ga(obs, betas_desc, pf_array, ncs):
 # load constants
 horizon = HORIZON
 n_episodes = test_constants.ELE_GA_N_EPISODES_EVAL
-max_cost = test_constants.ELE_GA_MAX_COST_EVAL
+max_cost_eval = test_constants.ELE_GA_MAX_COST_EVAL
 reset_prob = test_constants.ELE_GA_RESET_PROB_EVAL
-dirichlet_alpha = test_constants.ELE_GA_DIRICHLET_ALPHA_EVAL
+dirichlet_alpha_eval = test_constants.ELE_GA_DIRICHLET_ALPHA_EVAL
 random_state = test_constants.ELE_GA_RANDOM_STATE_EVAL
 explore_type = test_constants.ELE_GA_EXPLORE_TYPE_EVAL
 include_step = test_constants.ELE_GA_INC_STEP_EVAL
 
 print("horizon:", horizon)
 print("n_episodes:", n_episodes)
-print("max_cost:", max_cost)
+print("max_cost_eval:", max_cost_eval)
 print("reset_prob:", reset_prob)
-print("dirichlet_alpha:", dirichlet_alpha)
+print("dirichlet_alpha:", dirichlet_alpha_eval)
 print("random_state:", random_state)
 print("explore_type:", explore_type)
 print("include_step:", include_step)
 
+
+
+
 # 2) Recreate the same env config we used for PPO/DP eval to have fair comparison
-env = create_element_env(
-    horizon,
-    max_cost=max_cost,
+BASE_ENV = SingleElement(
+    max_steps=horizon,
+    discount=gamma,
     include_step_count=include_step,
     reset_prob=reset_prob,
-    dirichlet_alpha=dirichlet_alpha,
-    random_state=random_state
+    dirichlet_alpha=None if reset_prob is not None else np.asarray(dirichlet_alpha_eval, dtype=np.float32),
+    cost_kwargs={"normalizer": max_cost_eval},
+    seed=None if random_state == "off" else random_state,
 )
+
+
+
+env = GymWrapper(BASE_ENV, categorical_action_encoding=True)
+
+
+
 
 # 3) Roll out multiple episodes and average reward (same as DP loop and PPO eval)
 logs = defaultdict(list)
@@ -693,13 +717,14 @@ with tqdm(total=n_episodes*horizon) as pbar:
         for _ in range(n_episodes):
             td = env.reset()
 
+            init_obs = td["observation"].cpu().numpy().copy()
+
             obs_len = int(td["observation"].numel())
             observation = np.zeros((horizon, obs_len), dtype=np.float32)
             action      = np.zeros((horizon, 1),   dtype=np.int64)
             reward      = np.zeros((horizon, 1),   dtype=np.float32)
 
-            init_obs = td["observation"]
-            init_time_idx = int(init_obs[-1].item() * horizon) if include_step else 0
+            init_time_idx = int(td["observation"][-1].item() * horizon) if include_step else 0
 
             for i in range(init_time_idx, horizon):
                 curr_obs = td["observation"]
@@ -714,10 +739,13 @@ with tqdm(total=n_episodes*horizon) as pbar:
                 td["observation"] = res["next","observation"]
 
 
+            logs["init_observation"].append(init_obs)
             logs["observation"].append(observation)
             logs["action"].append(action)
             logs["reward"].append(reward)
-            logs["ep reward"].append(reward.sum().item())
+            logs["ep reward"].append(reward.sum())
+
+
             pbar.update(horizon)
 
 
@@ -737,19 +765,33 @@ print(
 
 # --- Plot: initial beta vs episode LCC ---
 # logs["observation"] is a list, each element is an array with shape (horizon, obs_dim)
-# first row is the initial observation (initial state)
-obs_trajs = logs["observation"]  # list length = n_episodes
+# # first row is the initial observation (initial state)
+# obs_trajs = logs["observation"]  # list length = n_episodes
 
-# grab initial observation per episode
-init_obs = np.array([traj[0] for traj in obs_trajs])  # shape: (n_episodes, obs_dim)
+# # grab initial observation per episode
+# init_obs = np.array([traj[0] for traj in obs_trajs])  # shape: (n_episodes, obs_dim)
 
-# if step-count is included, drop the last column so we keep only the condition-state vector
-# cs_pfs length is the number of condition states
+# # if step-count is included, drop the last column so we keep only the condition-state vector
+# # cs_pfs length is the number of condition states
+# init_states = init_obs[:, :len(cs_pfs)]  # shape: (n_episodes, ncs)
+
+# # state -> pf -> beta
+# init_pf = init_states @ cs_pfs  # shape: (n_episodes,)
+# init_beta = -norm.ppf(init_pf)  # shape: (n_episodes,)
+
+
+
+# --- Plot: initial beta vs episode LCC ---
+init_obs = np.array(logs["init_observation"])  # shape: (n_episodes, obs_dim)
+
+# keep only the condition-state part of the reset observation
 init_states = init_obs[:, :len(cs_pfs)]  # shape: (n_episodes, ncs)
 
 # state -> pf -> beta
 init_pf = init_states @ cs_pfs  # shape: (n_episodes,)
 init_beta = -norm.ppf(init_pf)  # shape: (n_episodes,)
+
+
 
 # plotted LCC = flip the sign of episode reward
 lcc_values = -np.array(logs["ep reward"])
@@ -852,7 +894,7 @@ for ep in range(n_print):
     ep_avg     = ep_rewards.mean()
 
     # --- initial state (from step 0 observation) ---
-    init_state = ep_obs[0, :ncs]   # first ncs entries are CS distribution
+    init_state = logs["init_observation"][ep][:ncs]   # true reset-state CS distribution   # first ncs entries are CS distribution
     init_str = ", ".join([f"cs{k}={p:.3f}" for k, p in enumerate(init_state)])
 
     print(f"Episode {ep}: return(sum)={ep_return:.4f} | avg/step={ep_avg:.6f}")

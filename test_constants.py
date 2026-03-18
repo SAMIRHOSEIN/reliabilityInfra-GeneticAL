@@ -1,10 +1,8 @@
-from turtle import st
 import numpy as np
 from scipy.stats import norm
 
-from element.problem_setup import ncs as NCS
-from element.problem_setup import na as NA
-from element.problem_setup import unit_costs, cs_pfs
+
+from bridge_gym.example_nbe107.settings import CS_PFS
 
 from torchrl.envs.utils import ExplorationType
 
@@ -16,8 +14,8 @@ ELE_GA_POP = 512  #512                # Population size - (Population * Genes = 
 ELE_GA_GENS = 500  #1024              # Number of generations - (Population * Genes = 128*256) ~ (PPO frames/horizon = 5*32*1024/5 = 32768)
 
 # β bounds inferred from state-based failure probabilities (cs_pfs)
-ELE_GA_LB_BETA = norm.ppf(1.0 - max(cs_pfs))  # ~2.5
-ELE_GA_UB_BETA = norm.ppf(1.0 - min(cs_pfs))  # ~4.2
+ELE_GA_LB_BETA = norm.ppf(1.0 - max(CS_PFS))  # ~2.5
+ELE_GA_UB_BETA = norm.ppf(1.0 - min(CS_PFS))  # ~4.2
 
 
 # ----------------------------- 1) Elitism and Parent Selection -----------------------------
@@ -172,11 +170,14 @@ MUTATION_NUM_GENES = 2   #3                  # 1 number of genes to mutate in a 
 
 
 
-ELE_GA_MAX_COST = unit_costs.max()
+gamma = 1.0 / 1.03
+
+
+# ELE_GA_MAX_COST = 1e7 #unit_costs.max()
 
 # Initial distribution control (reset-style)
 ELE_GA_RESET_PROB = None
-ELE_GA_DIRICHLET_ALPHA = [0.14964171, 0.11136174, 0.05003725, 0.03926025] #[0.05594704, 0.16108377, 0.05494736, 0.03863813] #0.5*np.ones(NCS)
+ELE_DP_DIRICHLET_ALPHA_Train = np.array([0.14964171, 0.11136174, 0.05003725, 0.03926025])
 ELE_GA_RANDOM_STATE = 42
 # ELE_GA_RESET_PROB = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
 # # ELE_GA_RESET_PROB = np.array([0.3, 0.7, 0.0, 0.0, 0.0])
@@ -185,12 +186,12 @@ ELE_GA_RANDOM_STATE = 42
 # ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON = 200 #5 #35
+ELE_GA_HORIZON = 5 #5 #35
 ELE_GA_N_EPISODES_EVAL = 10000 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
 ELE_GA_RESET_PROB_EVAL = None
-ELE_GA_DIRICHLET_ALPHA_EVAL = [0.14964171, 0.11136174, 0.05003725, 0.03926025] #[0.05594704, 0.16108377, 0.05494736, 0.03863813] # For all states: [0.15481776, 0.07666929, 0.04912562, 0.03946825] #0.5*np.ones(NCS)
+ELE_GA_DIRICHLET_ALPHA_EVAL = np.array([0.14964171, 0.11136174, 0.05003725, 0.03926025]) #[0.05594704, 0.16108377, 0.05494736, 0.03863813] # For all states: [0.15481776, 0.07666929, 0.04912562, 0.03946825] #0.5*np.ones(NCS)
 ELE_GA_RANDOM_STATE_EVAL = 42
 
 # ELE_GA_RESET_PROB_EVAL = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
@@ -199,7 +200,7 @@ ELE_GA_RANDOM_STATE_EVAL = 42
 # ELE_GA_DIRICHLET_ALPHA_EVAL = None
 # ELE_GA_RANDOM_STATE_EVAL = 'off'
 
-ELE_GA_INC_STEP_EVAL = True
+ELE_GA_INC_STEP_EVAL = False
 
 ELE_GA_EXPLORE_TYPE_EVAL = ExplorationType.DETERMINISTIC
 # endregion ==============================================================
