@@ -162,7 +162,7 @@ ELE_GA_CROSSOVER_PROBABILITY = None  #  if None => 100% of mating pairs crossove
 #       * mutation_num_genes = 3  -> aggressive mutation (75% of chromosome perturbed)
 #
 
-MUTATION_TYPE="random"                    # mutate genes by drawing random numbers. Best for continuous genes like your β-thresholds.
+MUTATION_TYPE="random"                    # mutate genes by drawing random numbers. Best for continuous genes like our β-thresholds.
 MUTATION_BY_REPLACEMENT=False             # deafult = False    
 RANDOM_MUTATION_MIN_VAL=-0.10             # deafult = -1.0
 RANDOM_MUTATION_MAX_VAL=0.10              # deafult = 1.0   # small β step (+0.10)
@@ -186,7 +186,7 @@ ELE_GA_RANDOM_STATE = 42
 # ELE_GA_RANDOM_STATE = 'off'
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
-ELE_GA_HORIZON = 5 #5 #35
+ELE_GA_HORIZON = 200 #5 #35
 ELE_GA_N_EPISODES_EVAL = 10000 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 

@@ -114,6 +114,7 @@ class SoftTreeClassifier(nn.Module):
         X = torch.atleast_2d(X)
         branch_probs = self.get_branch_log_prob(X)          
         y_log_probs = self.leaf_nodes(branch_probs)             # (N, C)   log-probabilities
+        y_log_probs = y_log_probs.squeeze(0)
         return y_log_probs
 
     def get_branch_log_prob(self, X):
