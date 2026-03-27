@@ -566,8 +566,6 @@ print(
     f"{mean_ep_reward:.4f} ± {std_ep_reward:.4f}"
 )
 
-
-
 # --- Plot: initial beta vs episode LCC ---
 init_obs = np.array(logs["init_observation"])  # shape: (n_episodes, obs_dim)
 
@@ -683,8 +681,6 @@ for t, (cs, a) in enumerate(zip(cs_traj, ep0_actions)):
         print(f"Step={t:02d}  act={id2name[int(a)]:<14} [{cs_str}]")
 
 
-
-
 print("\nCondition-state distribution per step (first 3 episodes):")
 
 n_print = min(5, len(logs["observation"]))
@@ -720,7 +716,6 @@ for ep in range(n_print):
             print(f"Step={t:02d}  t={t_traj[t]:.3f}  action={id2name[int(a)]:<14} [{cs_str}]")
         else:
             print(f"Step={t:02d}  action={id2name[int(a)]:<14} [{cs_str}]")
-
 
 
 # %%
