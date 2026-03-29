@@ -187,7 +187,7 @@ ELE_GA_RANDOM_STATE = 42
 
 # Inputs for Evaluation part: To compare GA with PPO(evaluation part)
 ELE_GA_HORIZON = 200 #5 #35
-ELE_GA_N_EPISODES_EVAL = 10000 # modified to avoid confusion
+ELE_GA_N_EPISODES_EVAL = 1000 #10000 # modified to avoid confusion
 ELE_GA_MAX_COST_EVAL = 1.0
 
 ELE_GA_RESET_PROB_EVAL = None
